@@ -1,0 +1,105 @@
+﻿using System;
+using System.Drawing;
+using System.IO;
+using ScintillaNET;
+using WeifenLuo.WinFormsUI.Docking;
+
+namespace WinForms_Docable
+{
+    public class CodeEditorPanel : DockContent
+    {
+        public string FilePath { get; }
+        public Scintilla Editor { get; }
+
+        public CodeEditorPanel(string filePath)
+        {
+            FilePath = filePath;
+            Text = Path.GetFileName(filePath);
+            DockAreas = DockAreas.Document;
+
+            Editor = new Scintilla
+            {
+                Dock = DockStyle.Fill,
+                WrapMode = WrapMode.None,
+                IndentationGuides = IndentView.LookBoth
+            };
+
+            Controls.Add(Editor);
+
+            ConfigureEditorForFile(Editor, filePath);
+            Editor.Text = File.ReadAllText(filePath);
+        }
+
+        private static void ConfigureEditorForFile(Scintilla editor, string path)
+        {
+            // Base style
+            editor.Styles[Style.Default].Font = "Consolas";
+            editor.Styles[Style.Default].Size = 10;
+            editor.Styles[Style.Default].BackColor = Color.FromArgb(30, 30, 30);
+            editor.Styles[Style.Default].ForeColor = Color.Gainsboro;
+            editor.StyleClearAll();
+
+            // Line numbers margin
+            editor.Margins[0].Width = 36;
+
+            var ext = Path.GetExtension(path).ToLowerInvariant();
+            switch (ext)
+            {
+                case ".c":
+                case ".cpp":
+                case ".cc":
+                case ".h":
+                case ".hpp":
+                case ".cs":
+                    ConfigureCppCSharp(editor, isCSharp: ext == ".cs");
+                    break;
+                case ".js":
+                case ".ts":
+                    editor.Lexer = Lexer.JavaScript;
+                    break;
+                case ".py":
+                    editor.Lexer = Lexer.Python;
+                    break;
+                case ".xml":
+                case ".html":
+                case ".htm":
+                    editor.Lexer = Lexer.Xml;
+                    break;
+                default:
+                    editor.Lexer = Lexer.Null; // plain text
+                    break;
+            }
+        }
+
+        private static void ConfigureCppCSharp(Scintilla editor, bool isCSharp)
+        {
+            editor.Lexer = Lexer.Cpp;
+
+            // Simple dark theme styles
+            editor.Styles[Style.Cpp.Default].ForeColor = Color.Gainsboro;
+            editor.Styles[Style.Cpp.Comment].ForeColor = Color.FromArgb(87, 166, 74);
+            editor.Styles[Style.Cpp.CommentLine].ForeColor = Color.FromArgb(87, 166, 74);
+            editor.Styles[Style.Cpp.CommentDoc].ForeColor = Color.FromArgb(87, 166, 74);
+            editor.Styles[Style.Cpp.Number].ForeColor = Color.FromArgb(181, 206, 168);
+            editor.Styles[Style.Cpp.Word].ForeColor = Color.FromArgb(86, 156, 214); // keywords
+            editor.Styles[Style.Cpp.Word2].ForeColor = Color.FromArgb(197, 134, 192); // types
+            editor.Styles[Style.Cpp.String].ForeColor = Color.FromArgb(214, 157, 133);
+            editor.Styles[Style.Cpp.Character].ForeColor = Color.FromArgb(214, 157, 133);
+            editor.Styles[Style.Cpp.Preprocessor].ForeColor = Color.FromArgb(155, 155, 155);
+            editor.Styles[Style.Cpp.Operator].ForeColor = Color.FromArgb(212, 212, 212);
+            editor.Styles[Style.Cpp.Identifier].ForeColor = Color.Gainsboro;
+
+            // Keywords
+            if (isCSharp)
+            {
+                editor.SetKeywords(0, "abstract as base bool break byte case catch char checked class const continue decimal default delegate do double else enum event explicit extern false finally fixed float for foreach goto if implicit in int interface internal is lock long namespace new null object operator out override params private protected public readonly ref return sbyte sealed short sizeof stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using virtual void volatile while record when where yield var dynamic get set value add remove global partial async await nameof nint nuint required file scoped");
+                editor.SetKeywords(1, "string object bool byte sbyte short ushort int uint long ulong float double decimal char void Task ValueTask DateTime TimeSpan Guid Exception IEnumerable IList IDictionary HashSet List Dictionary Tuple KeyValuePair Span ReadOnlySpan");
+            }
+            else
+            {
+                editor.SetKeywords(0, "asm auto bool break case catch char class const const_cast continue default delete do double dynamic_cast else enum explicit export extern false float for friend goto if inline int long mutable namespace new operator private protected public register reinterpret_cast return short signed sizeof static static_cast struct switch template this throw true try typedef typeid typename union unsigned using virtual void volatile wchar_t while");
+                editor.SetKeywords(1, "nullptr size_t ptrdiff_t int8_t uint8_t int16_t uint16_t int32_t uint32_t int64_t uint64_t string vector map unordered_map list set unordered_set tuple optional variant any");
+            }
+        }
+    }
+}

@@ -1,0 +1,8 @@
+C:\Users\davec\source\repos\Winforms_Docable\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\WinForms_Docable.csproj.AssemblyReference.cache
+C:\Users\davec\source\repos\Winforms_Docable\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\WinForms_Docable.Form1.resources
+C:\Users\davec\source\repos\Winforms_Docable\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\WinForms_Docable.PowerShellPanel.resources
+C:\Users\davec\source\repos\Winforms_Docable\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\WinForms_Docable.csproj.GenerateResource.cache
+C:\Users\davec\source\repos\Winforms_Docable\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\WinForms_Docable.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\davec\source\repos\Winforms_Docable\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\WinForms_Docable.AssemblyInfoInputs.cache
+C:\Users\davec\source\repos\Winforms_Docable\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\WinForms_Docable.AssemblyInfo.cs
+C:\Users\davec\source\repos\Winforms_Docable\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\WinForms_Docable.csproj.CoreCompileInputs.cache

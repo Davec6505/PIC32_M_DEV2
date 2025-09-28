@@ -1,0 +1,306 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using WeifenLuo.WinFormsUI.Docking;
+using ScintillaNET;
+
+namespace WinForms_Docable
+{
+    public class PowerShellPanel : DockContent
+    {
+        private readonly Scintilla _console;
+        private readonly PwshProcessHost _pwsh;
+
+        private readonly List<string> _history = new();
+        private int _historyIndex = -1;
+
+        private int _inputStart;
+        private string? _pendingWorkingDir;
+
+        public PowerShellPanel()
+        {
+            Text = "PowerShell";
+            DockAreas = DockAreas.Document | DockAreas.DockBottom | DockAreas.Float;
+
+            _console = new Scintilla
+            {
+                Dock = DockStyle.Fill,
+                Lexer = Lexer.PowerShell,
+                Font = new Font("Consolas", 10f),
+                WrapMode = WrapMode.None,
+                ReadOnly = false
+            };
+            ConfigureConsole();
+
+            Controls.Add(_console);
+
+            _pwsh = new PwshProcessHost();
+            _pwsh.Output += OnPwshOutput;
+            _pwsh.Error += OnPwshOutput;
+            _pwsh.Start("-NoLogo -NoExit");
+
+            AppendLine("pwsh process session started.");
+            _inputStart = _console.TextLength;
+
+            _console.KeyDown += OnConsoleKeyDown;
+            _console.MouseDown += OnConsoleMouseDown;
+            _console.UpdateUI += OnConsoleUpdateUI;
+        }
+
+        private void ConfigureConsole()
+        {
+            _console.Margins[0].Width = 0;
+            _console.Margins[2].Width = 0;
+            _console.CaretLineVisible = false;
+            _console.TabWidth = 4;
+            _console.UseTabs = false;
+
+            _console.StyleResetDefault();
+            _console.Styles[Style.Default].Font = "Consolas";
+            _console.Styles[Style.Default].Size = 10;
+            _console.Styles[Style.Default].BackColor = Color.White;
+            _console.Styles[Style.Default].ForeColor = Color.Black;
+            _console.StyleClearAll();
+        }
+
+        private void OnPwshOutput(string text)
+        {
+            Append(text);
+            // Lock previous output; force input at end
+            _inputStart = _console.TextLength;
+            _console.GotoPosition(_console.TextLength);
+            _console.ScrollCaret();
+            // Apply deferred working dir once shell is ready
+            if (!string.IsNullOrEmpty(_pendingWorkingDir))
+            {
+                var dir = _pendingWorkingDir;
+                _pendingWorkingDir = null;
+                ApplyWorkingDirectory(dir!, refreshPrompt: false);
+            }
+        }
+
+        private void Append(string text)
+        {
+            if (IsDisposed) return;
+            if (InvokeRequired) { BeginInvoke(new Action<string>(Append), text); return; }
+            _console.AppendText(text);
+            _console.GotoPosition(_console.TextLength);
+            _console.ScrollCaret();
+        }
+
+        private void AppendLine(string text) => Append(text + Environment.NewLine);
+
+        private void ClearConsole()
+        {
+            if (IsDisposed) return;
+            if (InvokeRequired) { BeginInvoke(new Action(ClearConsole)); return; }
+            _console.ClearAll();
+            _console.EmptyUndoBuffer();
+            _console.GotoPosition(0);
+            _inputStart = 0;
+        }
+
+        private string GetInputText()
+        {
+            var start = _inputStart;
+            var end = _console.TextLength;
+            var len = Math.Max(0, end - start);
+            return len == 0 ? string.Empty : _console.GetTextRange(start, len);
+        }
+
+        private void ReplaceInput(string text)
+        {
+            _console.TargetStart = _inputStart;
+            _console.TargetEnd = _console.TextLength;
+            _console.ReplaceTarget(text ?? string.Empty);
+            _console.GotoPosition(_console.TextLength);
+            _console.ScrollCaret();
+        }
+
+        private void OnConsoleMouseDown(object? sender, MouseEventArgs e)
+        {
+            // Prevent placing caret before current input start
+            if (_console.CurrentPosition < _inputStart)
+            {
+                _console.GotoPosition(_console.TextLength);
+            }
+        }
+
+        private void OnConsoleUpdateUI(object? sender, UpdateUIEventArgs e)
+        {
+            // Clamp caret and anchor to input start
+            if (_console.CurrentPosition < _inputStart)
+                _console.GotoPosition(_console.TextLength);
+            if (_console.AnchorPosition < _inputStart)
+                _console.AnchorPosition = _inputStart;
+        }
+
+        private void OnConsoleKeyDown(object? sender, KeyEventArgs e)
+        {
+            // Keep selection and caret at/after input start
+            if (!EnsureEditableSelection())
+            {
+                e.SuppressKeyPress = true;
+                return;
+            }
+
+            // Submit command
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                var cmd = GetInputText();
+
+                if (!string.IsNullOrWhiteSpace(cmd))
+                {
+                    _history.Add(cmd);
+                    _historyIndex = _history.Count;
+                }
+
+                AppendLine(""); // echo newline
+                _pwsh.SendLine(cmd);
+                _inputStart = _console.TextLength;
+                return;
+            }
+
+            // History navigation
+            if (e.KeyCode == Keys.Up)
+            {
+                e.SuppressKeyPress = true;
+                if (_history.Count == 0) return;
+                _historyIndex = Math.Max(0, _historyIndex - 1);
+                ReplaceInput(_history[_historyIndex]);
+                return;
+            }
+            if (e.KeyCode == Keys.Down)
+            {
+                e.SuppressKeyPress = true;
+                if (_history.Count == 0) return;
+                _historyIndex = Math.Min(_history.Count, _historyIndex + 1);
+                ReplaceInput(_historyIndex == _history.Count ? string.Empty : _history[_historyIndex]);
+                return;
+            }
+
+            // Edit boundaries
+            if (e.KeyCode == Keys.Home)
+            {
+                e.SuppressKeyPress = true;
+                _console.GotoPosition(_inputStart);
+                return;
+            }
+            if (e.KeyCode == Keys.Left)
+            {
+                if (_console.CurrentPosition <= _inputStart)
+                {
+                    e.SuppressKeyPress = true;
+                    _console.GotoPosition(_inputStart);
+                    return;
+                }
+            }
+            if (e.KeyCode == Keys.Back)
+            {
+                if (_console.SelectionStart <= _inputStart)
+                {
+                    e.SuppressKeyPress = true;
+                    return;
+                }
+            }
+            if (e.KeyCode == Keys.Delete)
+            {
+                var selStart = Math.Min(_console.SelectionStart, _console.SelectionEnd);
+                if (selStart < _inputStart)
+                {
+                    e.SuppressKeyPress = true;
+                    return;
+                }
+            }
+
+            // Ctrl+C: no graceful cancel for external pwsh; just echo
+            if (e.Control && e.KeyCode == Keys.C)
+            {
+                e.SuppressKeyPress = true;
+                AppendLine("^C (cancel not available for external pwsh host)");
+                _inputStart = _console.TextLength;
+                return;
+            }
+
+            // Paste handling: clamp to input
+            if (e.Control && e.KeyCode == Keys.V)
+            {
+                e.SuppressKeyPress = true;
+                var text = Clipboard.GetText();
+                if (string.IsNullOrEmpty(text)) return;
+                if (!EnsureEditableSelection()) return;
+                _console.ReplaceSelection(text);
+            }
+        }
+
+        private bool EnsureEditableSelection()
+        {
+            var start = Math.Min(_console.SelectionStart, _console.SelectionEnd);
+            var end = Math.Max(_console.SelectionStart, _console.SelectionEnd);
+
+            if (start < _inputStart)
+            {
+                start = _inputStart;
+                _console.SetSelection(start, end);
+            }
+
+            if (_console.CurrentPosition < _inputStart)
+            {
+                _console.GotoPosition(_console.TextLength);
+            }
+
+            return _console.SelectionStart >= _inputStart && _console.CurrentPosition >= _inputStart;
+        }
+
+        // Public API to update the shell working directory to the project's folder.
+        public void SetWorkingDirectory(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path)) return;
+
+            if (!_pwsh.IsRunning)
+            {
+                _pendingWorkingDir = path;
+                return;
+            }
+
+            ApplyWorkingDirectory(path, refreshPrompt: false);
+        }
+
+        private static string QuotePwsh(string path)
+            => "'" + path.Replace("'", "''") + "'";
+
+        private void ApplyWorkingDirectory(string path, bool refreshPrompt)
+        {
+            try
+            {
+                _pwsh.SendLine($"Set-Location -LiteralPath {QuotePwsh(path)}");
+                if (refreshPrompt && string.IsNullOrEmpty(GetInputText()))
+                {
+                    ReplaceInput(string.Empty);
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendLine($"Set-Location error: {ex.Message}");
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _pwsh?.Dispose();
+
+                _console.KeyDown -= OnConsoleKeyDown;
+                _console.MouseDown -= OnConsoleMouseDown;
+                _console.UpdateUI -= OnConsoleUpdateUI;
+            }
+            base.Dispose(disposing);
+        }
+    }
+}

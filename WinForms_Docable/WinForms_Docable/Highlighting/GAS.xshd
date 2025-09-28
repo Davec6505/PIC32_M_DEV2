@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<SyntaxDefinition name="Assembler" extensions=".asm;.s"
+  xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+
+  <!-- Color definitions -->
+  <Color name="Instruction" foreground="Blue" />
+  <Color name="Register" foreground="DarkCyan" />
+  <Color name="Comment" foreground="Green" />
+  <Color name="Directive" foreground="DarkRed" fontWeight="bold" />
+  <Color name="Label" foreground="Purple" fontWeight="bold" />
+  <Color name="Number" foreground="DarkMagenta" />
+
+
+  <!-- RuleSet -->
+  <RuleSet ignoreCase="true">
+    <!-- Comments -->
+    <Span color="Comment" begin=";" end="\n" />
+    <Span color="Comment" begin="#" end="\n" />
+
+    <!-- Labels (e.g., start:) -->
+    <Span color="Label" begin="^[a-zA-Z_][a-zA-Z0-9_]*:" end=":" />
+
+
+
+    <!-- Instructions -->
+    <Keywords color="Instruction">
+      <Word>mov</Word>
+      <Word>add</Word>
+      <Word>sub</Word>
+      <Word>jmp</Word>
+      <Word>cmp</Word>
+      <Word>push</Word>
+      <Word>pop</Word>
+      <Word>call</Word>
+      <Word>ret</Word>
+      <Word>lw</Word>
+      <Word>sw</Word>
+      <Word>beq</Word>
+      <Word>bne</Word>
+      <Word>j</Word>
+      <Word>jal</Word>
+      <Word>jr</Word>
+    </Keywords>
+
+    <Keywords color="Register">
+      <Word>$zero</Word>
+      <Word>$t0</Word>
+      <Word>$t1</Word>
+      <Word>$t2</Word>
+      <Word>$s0</Word>
+      <Word>$s1</Word>
+      <Word>$a0</Word>
+      <Word>$v0</Word>
+      <Word>$sp</Word>
+      <Word>$ra</Word>
+      <Word>eax</Word>
+      <Word>ebx</Word>
+      <Word>ecx</Word>
+      <Word>edx</Word>
+      <Word>esi</Word>
+      <Word>edi</Word>
+      <Word>esp</Word>
+      <Word>ebp</Word>
+    </Keywords>
+
+    <Keywords color="Directive">
+      <Word>.data</Word>
+      <Word>.text</Word>
+      <Word>.globl</Word>
+      <Word>.global</Word>
+      <Word>.section</Word>
+    </Keywords>
+
+    <!-- Numbers -->
+    <Rule color="Number">\b\d+\b</Rule>
+  </RuleSet>
+</SyntaxDefinition>
