@@ -1,0 +1,97 @@
+# Visual Studio build and user files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Bb]in/
+[Oo]bj/
+*.dll
+*.exe
+*.pdb
+*.cache
+*.log
+
+# NuGet packages
+*.nupkg
+packages/
+.nuget/
+project.lock.json
+project.fragment.lock.json
+
+# Dotnet CLI
+artifacts/
+*.deps.json
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Publish output
+publish/
+out/
+*.Publish.xml
+
+# Resharper and Rider
+*.DotSettings.user
+.idea/
+*.sln.iml
+
+# Code analysis
+*.ruleset
+*.editorconfig
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# SQLite/IntelliCode/Copilot indices
+*.db
+*.db-shm
+*.db-wal
+CopilotIndices/
+
+# Others
+*.vspscc
+*.vssscc
+_ReSharper*/
+*.resharper
+*.tss
+*.psess
+*.vsp
+*.vsix
+*.docstates
+
+# Test results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# Auto-generated files
+Generated_Code/
+
+# User-specific files
+*.swp
+*.bak
+*.tmp
+
+# Ignore project tree exports
+*.tree.txt
+
+# Ignore layout files
+layout.xml
+layout_tmp.xml
+
+# Ignore dependencies folder if generated
+dependancies/
+
+# Ignore PowerShell history
+*.pshistory
+
+# Ignore AvalonEdit temp files
+*.~*
+
+# Ignore any other temp files
+*.tmp

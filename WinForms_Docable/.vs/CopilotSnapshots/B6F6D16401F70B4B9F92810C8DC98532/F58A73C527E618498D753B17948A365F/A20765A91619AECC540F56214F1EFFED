@@ -1,0 +1,43 @@
+﻿using System;
+using System.Drawing;
+using System.IO;
+using System.Text;
+using System.Windows.Forms;
+using WeifenLuo.WinFormsUI.Docking;
+
+namespace WinForms_Docable
+{
+    public class CodeEditorPanel : DockContent
+    {
+        public string FilePath { get; }
+        private readonly RichTextBox _editor;
+
+        public CodeEditorPanel(string filePath)
+        {
+            FilePath = filePath;
+            Text = Path.GetFileName(filePath);
+            DockAreas = DockAreas.Document;
+
+            _editor = new RichTextBox
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font("Consolas", 10f),
+                ReadOnly = false,
+                Multiline = true,
+                WordWrap = false
+            };
+
+            Controls.Add(_editor);
+
+            try
+            {
+                _editor.Text = File.ReadAllText(filePath, Encoding.UTF8);
+            }
+            catch (Exception ex)
+            {
+                _editor.Text = $"Error loading file: {ex.Message}";
+                _editor.ReadOnly = true;
+            }
+        }
+    }
+}

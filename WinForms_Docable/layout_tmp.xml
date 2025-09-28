@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<dockPanel formatVersion="1.0" dockLeftPortion="0.25" dockRightPortion="0.25" dockTopPortion="0.25" dockBottomPortion="0.25" documentStyle="DockingMdi">
+  <contents count="4">
+    <content id="0" persistString="WinForms_Docable.ProjectTreePanel" />
+    <content id="1" persistString="Right Panel" />
+    <content id="2" persistString="Main Document" />
+    <content id="3" persistString="WinForms_Docable.PowerShellPanel" />
+  </contents>
+
+  <floatWindows count="0" />
+
+  <dockWindows>
+    <dockWindow id="0" dockState="DockLeft">
+      <nestedPanes count="1">
+        <pane id="0" activeContent="0" prevPane="-1" alignment="Left" proportion="0.25">
+          <contents count="1">
+            <content id="0" ref="0" />
+          </contents>
+        </pane>
+      </nestedPanes>
+    </dockWindow>
+
+    <dockWindow id="1" dockState="DockRight">
+      <nestedPanes count="1">
+        <pane id="1" activeContent="1" prevPane="-1" alignment="Right" proportion="0.25">
+          <contents count="1">
+            <content id="1" ref="1" />
+          </contents>
+        </pane>
+      </nestedPanes>
+    </dockWindow>
+
+    <dockWindow id="2" dockState="DockTop">
+      <nestedPanes count="0" />
+    </dockWindow>
+
+    <dockWindow id="3" dockState="DockBottom">
+      <nestedPanes count="0" />
+    </dockWindow>
+
+    <dockWindow id="4" dockState="Document">
+      <nestedPanes count="1">
+        <pane id="2" activeContent="2" prevPane="-1" alignment="Document" proportion="0.5">
+          <contents count="1">
+            <content id="2" ref="2" />
+          </contents>
+        </pane>
+      </nestedPanes>
+    </dockWindow>
+  </dockWindows>
+
+  <autoHideWindows>
+    <autoHideWindow dockState="DockLeft">
+      <nestedPanes count="0" />
+    </autoHideWindow>
+    <autoHideWindow dockState="DockRight">
+      <nestedPanes count="0" />
+    </autoHideWindow>
+    <autoHideWindow dockState="DockTop">
+      <nestedPanes count="0" />
+    </autoHideWindow>
+    <autoHideWindow dockState="DockBottom">
+      <nestedPanes count="1">
+        <pane id="3" activeContent="3" prevPane="-1" alignment="Bottom" proportion="0.25">
+          <contents count="1">
+            <content id="3" ref="3" />
+          </contents>
+        </pane>
+      </nestedPanes>
+    </autoHideWindow>
+  </autoHideWindows>
+</dockPanel>

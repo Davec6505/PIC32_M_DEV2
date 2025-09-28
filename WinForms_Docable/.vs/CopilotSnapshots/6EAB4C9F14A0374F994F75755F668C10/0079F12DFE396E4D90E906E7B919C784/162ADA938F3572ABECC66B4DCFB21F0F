@@ -1,0 +1,134 @@
+﻿using System;
+using System.Drawing;
+using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Windows.Forms;
+using WeifenLuo.WinFormsUI.Docking;
+
+namespace WinForms_Docable
+{
+    public class CodeEditorPanel : DockContent
+    {
+        public string FilePath { get; }
+        private readonly RichTextBox _editor;
+
+        public CodeEditorPanel(string filePath)
+        {
+            FilePath = filePath;
+            Text = Path.GetFileName(filePath);
+            DockAreas = DockAreas.Document;
+
+            _editor = new RichTextBox
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font("Consolas", 10f),
+                ReadOnly = false,
+                Multiline = true,
+                WordWrap = false,
+                HideSelection = false
+            };
+
+            Controls.Add(_editor);
+
+            try
+            {
+                _editor.Text = File.ReadAllText(filePath, Encoding.UTF8);
+            }
+            catch (Exception ex)
+            {
+                _editor.Text = $"Error loading file: {ex.Message}";
+                _editor.ReadOnly = true;
+            }
+
+            // Apply syntax highlighting for C/C headers on load
+            var ext = Path.GetExtension(filePath).ToLowerInvariant();
+            if (ext is ".c" or ".h")
+            {
+                ApplyCSyntaxHighlighting();
+            }
+        }
+
+        private static string EscapeWords(string spaceSeparatedWords)
+        {
+            if (string.IsNullOrWhiteSpace(spaceSeparatedWords)) return string.Empty;
+            var parts = spaceSeparatedWords.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < parts.Length; i++) parts[i] = Regex.Escape(parts[i]);
+            return string.Join("|", parts);
+        }
+
+        private void ApplyCSyntaxHighlighting()
+        {
+            // Basic, non-incremental syntax highlighting for C/C headers.
+            // Highlights: comments, strings/chars, preprocessor, keywords, types, numbers.
+            if (_editor.TextLength == 0) return;
+
+            var selStart = _editor.SelectionStart;
+            var selLength = _editor.SelectionLength;
+
+            _editor.SuspendLayout();
+            try
+            {
+                // Reset all formatting
+                _editor.Select(0, _editor.TextLength);
+                _editor.SelectionColor = Color.Black;
+
+                string text = _editor.Text;
+
+                // Regexes (use verbatim strings to keep patterns readable)
+                var rxLineComment = new Regex(@"//.*", RegexOptions.Compiled);
+                var rxBlockComment = new Regex(@"/\*.*?\*/", RegexOptions.Singleline | RegexOptions.Compiled);
+                var rxString = new Regex(@"\""(?:\\.|[^\""\\])*\""", RegexOptions.Compiled);
+                var rxChar = new Regex(@"'(?:\\.|[^'\\])'", RegexOptions.Compiled);
+                var rxPreproc = new Regex(@"^\s*#\s*\w+.*$", RegexOptions.Multiline | RegexOptions.Compiled);
+                var rxNumber = new Regex(@"\b(0x[0-9a-fA-F]+|\d+)(u|U|l|L|ul|UL|llu|LLU|ll|LL)?\b", RegexOptions.Compiled);
+
+                // Keyword sets
+                string kw = @"auto break case char const continue default do double else enum extern float for goto if inline int long register restrict return short signed sizeof static struct switch typedef union unsigned void volatile while _Alignas _Alignof _Atomic _Bool _Complex _Generic _Imaginary _Noreturn _Static_assert _Thread_local";
+                string types = @"bool size_t ptrdiff_t int8_t int16_t int32_t int64_t uint8_t uint16_t uint32_t uint64_t intptr_t uintptr_t wchar_t FILE va_list";
+                var rxKeywords = new Regex(@"\b(" + EscapeWords(kw) + @")\b", RegexOptions.Compiled);
+                var rxTypes = new Regex(@"\b(" + EscapeWords(types) + @")\b", RegexOptions.Compiled);
+
+                // Apply in an order to avoid overwriting comment/string colors with keywords
+                Color colComment = Color.FromArgb(0, 128, 0);
+                Color colString = Color.FromArgb(163, 21, 21);
+                Color colPre = Color.FromArgb(0, 0, 255);
+                Color colKw = Color.FromArgb(0, 0, 255);
+                Color colType = Color.FromArgb(43, 145, 175);
+                Color colNum = Color.FromArgb(163, 21, 21);
+
+                void ColorMatches(Regex rx, Color c)
+                {
+                    foreach (Match m in rx.Matches(text))
+                    {
+                        _editor.Select(m.Index, m.Length);
+                        _editor.SelectionColor = c;
+                    }
+                }
+
+                // Comments and strings first
+                ColorMatches(rxBlockComment, colComment);
+                ColorMatches(rxLineComment, colComment);
+                ColorMatches(rxString, colString);
+                ColorMatches(rxChar, colString);
+
+                // Preprocessor lines
+                ColorMatches(rxPreproc, colPre);
+
+                // Numbers
+                ColorMatches(rxNumber, colNum);
+
+                // Keywords and types
+                ColorMatches(rxKeywords, colKw);
+                ColorMatches(rxTypes, colType);
+            }
+            finally
+            {
+                // Restore selection and layout
+                _editor.Select(selStart, selLength);
+                _editor.ScrollToCaret();
+                _editor.ResumeLayout();
+            }
+        }
+    }
+}

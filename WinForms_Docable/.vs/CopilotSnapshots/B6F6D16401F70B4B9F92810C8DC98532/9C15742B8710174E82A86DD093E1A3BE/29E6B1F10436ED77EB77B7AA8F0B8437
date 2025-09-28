@@ -1,0 +1,110 @@
+﻿using System.Globalization;
+using System.Management.Automation;
+using System.Management.Automation.Host; // needed for PSHostUserInterface, PSHostRawUI, etc.
+
+
+namespace WinForms_Docable
+{
+    internal sealed class ScintillaPSHost : PSHost
+    {
+        private readonly Guid _id = Guid.NewGuid();
+        private readonly ScintillaPSHostUI _ui;
+
+        public ScintillaPSHost(Action<string> write, Action<string> writeLine, Action clear)
+        {
+            _ui = new ScintillaPSHostUI(write, writeLine, clear);
+        }
+
+        public override CultureInfo CurrentCulture => CultureInfo.CurrentCulture;
+        public override CultureInfo CurrentUICulture => CultureInfo.CurrentUICulture;
+        public override Guid InstanceId => _id;
+        public override string Name => "ScintillaPSHost";
+        public override Version Version => new Version(1, 0);
+        public override PSHostUserInterface UI => _ui;
+
+        public override void EnterNestedPrompt() { }
+        public override void ExitNestedPrompt() { }
+        public override void NotifyBeginApplication() { }
+        public override void NotifyEndApplication() { }
+        public override void SetShouldExit(int exitCode) { }
+
+        private sealed class ScintillaPSHostUI : PSHostUserInterface
+        {
+            private readonly ScintillaRawUI _rawUI;
+            private readonly Action<string> _write;
+            private readonly Action<string> _writeLine;
+
+            public ScintillaPSHostUI(Action<string> write, Action<string> writeLine, Action clear)
+            {
+                _write = write;
+                _writeLine = writeLine;
+                _rawUI = new ScintillaRawUI(clear);
+            }
+
+            public override PSHostRawUI RawUI => _rawUI;
+
+            public override void Write(ConsoleColor foregroundColor, ConsoleColor backgroundColor, string value)
+                => _write(value);
+
+            public override void Write(string value) => _write(value);
+            public override void WriteLine(string value) => _writeLine(value);
+            public override void WriteLine() => _writeLine(string.Empty);
+            public override void WriteErrorLine(string value) => _writeLine(value);
+            public override void WriteDebugLine(string message) => _writeLine(message);
+            public override void WriteVerboseLine(string message) => _writeLine(message);
+            public override void WriteWarningLine(string message) => _writeLine(message);
+            public override void WriteProgress(long sourceId, ProgressRecord record) { /* no-op */ }
+
+            // Minimal input; extend as needed
+            public override string ReadLine() => throw new NotSupportedException("Read-Host not implemented.");
+            public override System.Security.SecureString ReadLineAsSecureString()
+                => throw new NotSupportedException("Read-Host -AsSecureString not implemented.");
+
+            public override int PromptForChoice(string caption, string message, System.Collections.ObjectModel.Collection<ChoiceDescription> choices, int defaultChoice)
+                => throw new NotSupportedException("PromptForChoice not implemented.");
+
+            public override System.Collections.Generic.Dictionary<string, PSObject> Prompt(string caption, string message, System.Collections.ObjectModel.Collection<FieldDescription> descriptions)
+                => throw new NotSupportedException("Prompt not implemented.");
+
+            public override PSCredential PromptForCredential(string caption, string message, string userName, string targetName)
+                => throw new NotSupportedException("PromptForCredential not implemented.");
+
+            public override PSCredential PromptForCredential(string caption, string message, string userName, string targetName, PSCredentialTypes allowedCredentialTypes, PSCredentialUIOptions options)
+                => throw new NotSupportedException("PromptForCredential not implemented.");
+        }
+
+        private sealed class ScintillaRawUI : PSHostRawUI
+        {
+            private readonly Action _clear;
+            private ConsoleColor _fg = ConsoleColor.Gray;
+            private ConsoleColor _bg = ConsoleColor.Black;
+            private HostSize _bufferSize = new HostSize(120, 9999);
+            private HostSize _windowSize = new HostSize(120, 40);
+            private string _title = "PowerShell";
+
+            public ScintillaRawUI(Action clear) => _clear = clear;
+
+            public override ConsoleColor BackgroundColor { get => _bg; set => _bg = value; }
+            public override ConsoleColor ForegroundColor { get => _fg; set => _fg = value; }
+            public override HostSize BufferSize { get => _bufferSize; set => _bufferSize = value; }
+            public override HostSize WindowSize { get => _windowSize; set => _windowSize = value; }
+            public override HostSize MaxPhysicalWindowSize => new HostSize(Int16.MaxValue, Int16.MaxValue);
+            public override HostSize MaxWindowSize => new HostSize(Int16.MaxValue, Int16.MaxValue);
+            public override Coordinates CursorPosition { get; set; } = new Coordinates(0, 0);
+            public override int CursorSize { get; set; } = 25;
+            public override bool KeyAvailable => false;
+            public override void FlushInputBuffer() { }
+            public override BufferCell[,] GetBufferContents(System.Management.Automation.Host.Rectangle rectangle)
+                => throw new NotSupportedException();
+            public override KeyInfo ReadKey(ReadKeyOptions options)
+                => throw new NotSupportedException("ReadKey not implemented.");
+            public override void ScrollBufferContents(System.Management.Automation.Host.Rectangle source, System.Management.Automation.Host.Coordinates destination, System.Management.Automation.Host.Rectangle clip, System.Management.Automation.Host.BufferCell fill)
+                => throw new NotSupportedException();
+
+            public override void SetBufferContents(System.Management.Automation.Host.Rectangle rectangle, System.Management.Automation.Host.BufferCell fill) { /* no-op */ }
+            public override void SetBufferContents(System.Management.Automation.Host.Coordinates origin, System.Management.Automation.Host.BufferCell[,] contents) { /* no-op */ }
+
+            public override void Clear() => _clear();
+        }
+    }
+}
