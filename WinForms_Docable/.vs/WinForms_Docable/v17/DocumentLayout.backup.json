@@ -3,11 +3,15 @@
   "WorkspaceRootPath": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\gitignore .gitignore||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:gitignore .gitignore||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{9DCE4650-E3C7-4DA8-8D9C-9DF2250AD825}|WinForms_Docable\\WinForms_Docable.csproj|c:\\users\\davec\\git\\pic32_m_dev2\\winforms_docable\\winforms_docable\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9DCE4650-E3C7-4DA8-8D9C-9DF2250AD825}|WinForms_Docable\\WinForms_Docable.csproj|solutionrelative:winforms_docable\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9DCE4650-E3C7-4DA8-8D9C-9DF2250AD825}|WinForms_Docable\\WinForms_Docable.csproj|c:\\users\\davec\\git\\pic32_m_dev2\\winforms_docable\\winforms_docable\\properties\\settings.settings||{6D2695F9-5365-4A78-89ED-F205C045BFE6}",
+      "AbsoluteMoniker": "D:0:0:{9DCE4650-E3C7-4DA8-8D9C-9DF2250AD825}|WinForms_Docable\\WinForms_Docable.csproj|C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\winforms_docable\\properties\\settings.settings||{6D2695F9-5365-4A78-89ED-F205C045BFE6}",
       "RelativeMoniker": "D:0:0:{9DCE4650-E3C7-4DA8-8D9C-9DF2250AD825}|WinForms_Docable\\WinForms_Docable.csproj|solutionrelative:winforms_docable\\properties\\settings.settings||{6D2695F9-5365-4A78-89ED-F205C045BFE6}"
     },
     {
@@ -29,7 +33,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 367,
-          "SelectedChildIndex": 8,
+          "SelectedChildIndex": 6,
           "Children": [
             {
               "$type": "Bookmark",
@@ -57,19 +61,31 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
+              "Title": "gitignore .gitignore",
+              "DocumentMoniker": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\gitignore .gitignore",
+              "RelativeDocumentMoniker": "gitignore .gitignore",
+              "ToolTip": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\gitignore .gitignore",
+              "RelativeToolTip": "gitignore .gitignore",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAGAAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-09-28T06:28:56.531Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "Settings.settings",
               "DocumentMoniker": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\WinForms_Docable\\Properties\\Settings.settings",
               "RelativeDocumentMoniker": "WinForms_Docable\\Properties\\Settings.settings",
               "ToolTip": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\WinForms_Docable\\Properties\\Settings.settings",
               "RelativeToolTip": "WinForms_Docable\\Properties\\Settings.settings",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002767|",
-              "WhenOpened": "2025-09-28T06:19:30.893Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-28T06:19:30.893Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "Form1.Designer.cs",
               "DocumentMoniker": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\WinForms_Docable\\Form1.Designer.cs",
               "RelativeDocumentMoniker": "WinForms_Docable\\Form1.Designer.cs",
@@ -77,25 +93,24 @@
               "RelativeToolTip": "WinForms_Docable\\Form1.Designer.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-28T05:00:48.071Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-28T05:00:48.071Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Form1.cs",
               "DocumentMoniker": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\WinForms_Docable\\Form1.cs",
               "RelativeDocumentMoniker": "WinForms_Docable\\Form1.cs",
               "ToolTip": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\WinForms_Docable\\Form1.cs",
               "RelativeToolTip": "WinForms_Docable\\Form1.cs",
-              "ViewState": "AgIAAMUAAAAAAAAAAAAgwNkAAABdAAAAAAAAAA==",
+              "ViewState": "AgIAAMUAAAAAAAAAAAAgwPEAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-24T19:42:09.649Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "ProjectTreePanel.cs",
               "DocumentMoniker": "C:\\Users\\davec\\source\\repos\\Winforms_Docable\\WinForms_Docable\\WinForms_Docable\\ProjectTreePanel.cs",
               "RelativeDocumentMoniker": "..\\..\\..\\source\\repos\\Winforms_Docable\\WinForms_Docable\\WinForms_Docable\\ProjectTreePanel.cs",
@@ -103,12 +118,11 @@
               "RelativeToolTip": "..\\..\\..\\source\\repos\\Winforms_Docable\\WinForms_Docable\\WinForms_Docable\\ProjectTreePanel.cs",
               "ViewState": "AgIAAEUAAAAAAAAAAAAAAF0AAAAiAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-28T05:41:23.38Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-28T05:41:23.38Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "ProjectTreePanel.cs",
               "DocumentMoniker": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\WinForms_Docable\\ProjectTreePanel.cs",
               "RelativeDocumentMoniker": "WinForms_Docable\\ProjectTreePanel.cs",
@@ -116,8 +130,7 @@
               "RelativeToolTip": "WinForms_Docable\\ProjectTreePanel.cs",
               "ViewState": "AgIAALoAAAAAAAAAAAAuwNAAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-28T05:12:06.095Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-28T05:12:06.095Z"
             }
           ]
         }
