@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
 using WinForms_Docable.Interfaces;
@@ -17,6 +18,9 @@ namespace WinForms_Docable
         public event EventHandler<string>? CloseFileRequested;
         public event EventHandler<string>? DeleteFileRequested;
 
+        // Added property
+        public string TargetRootDirectory { get; set; } = string.Empty;
+
         public ProjectTreePanel()
         {
             Text = "Project Explorer";
@@ -30,6 +34,35 @@ namespace WinForms_Docable
             };
             Controls.Add(treeView);
 
+            treeView.AllowDrop = true;
+
+            treeView.DragEnter += (s, e) =>
+            {
+                if (e.Data.GetDataPresent(typeof(List<string>)) || e.Data.GetDataPresent(DataFormats.FileDrop))
+                    e.Effect = DragDropEffects.Copy;
+            };
+
+            treeView.DragDrop += (s, e) =>
+            {
+                List<string> files = e.Data.GetData(typeof(List<string>)) as List<string>
+                    ?? (e.Data.GetData(DataFormats.FileDrop) as string[])?.ToList();
+                if (files != null)
+                {
+                    TreeNode dropNode = treeView.GetNodeAt(treeView.PointToClient(Cursor.Position));
+                    string targetRoot = TargetRootDirectory;
+                    string parentPath = "";
+                    if (dropNode != null && dropNode.Tag is string selectedPath && Directory.Exists(selectedPath))
+                    {
+                        targetRoot = selectedPath;
+                        parentPath = selectedPath;
+                    }
+                    foreach (var file in files)
+                    {
+                        CopyWithStructure(file, targetRoot, parentPath);
+                    }
+                }
+            };
+
             InitializeContextMenu();
 
             treeView.NodeMouseDoubleClick += TreeView_NodeMouseDoubleClick;
@@ -41,11 +74,34 @@ namespace WinForms_Docable
             _nodeContextMenu = new ContextMenuStrip();
             var saveItem = new ToolStripMenuItem("Save", null, OnSaveNodeClicked);
             var saveAsItem = new ToolStripMenuItem("Save As", null, OnSaveAsNodeClicked);
+            var copyItem = new ToolStripMenuItem("Copy", null, OnCopyNodeClicked); // Add Copy
             var closeItem = new ToolStripMenuItem("Close", null, OnCloseNodeClicked);
+            var pasteItem = new ToolStripMenuItem("Paste", null, (s, e) =>
+            {
+                var col = Clipboard.GetFileDropList();
+                if (col != null && col.Count > 0)
+                {
+                    string targetRoot = TargetRootDirectory;
+                    string parentPath = "";
+                    if (treeView.SelectedNode != null && treeView.SelectedNode.Tag is string selectedPath && Directory.Exists(selectedPath))
+                    {
+                        targetRoot = selectedPath;
+                        parentPath = selectedPath;
+                    }
+                    foreach (string file in col)
+                    {
+                        CopyWithStructure(file, targetRoot, parentPath);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Clipboard does not contain any files or folders to paste.", "Paste", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            });
             var deleteItem = new ToolStripMenuItem("Delete", null, OnDeleteNodeClicked);
 
             _nodeContextMenu.Items.AddRange(new ToolStripItem[] {
-                saveItem, saveAsItem, closeItem, deleteItem
+                saveItem, saveAsItem, copyItem, closeItem, pasteItem, deleteItem
             });
 
             treeView.ContextMenuStrip = _nodeContextMenu;
@@ -55,7 +111,8 @@ namespace WinForms_Docable
         private void TreeView_NodeMouseClick_ShowMenu(object? sender, TreeNodeMouseClickEventArgs e)
         {
             treeView.SelectedNode = e.Node;
-            if (IsFileNode(e.Node) && e.Button == MouseButtons.Right)
+            // Show menu for file nodes OR root nodes (parent == null)
+            if ((IsFileNode(e.Node) || e.Node.Parent == null) && e.Button == MouseButtons.Right)
             {
                 _nodeContextMenu.Show(treeView, e.Location);
             }
@@ -98,19 +155,32 @@ namespace WinForms_Docable
             {
                 CloseFileRequested?.Invoke(this, node.Tag as string ?? string.Empty);
             }
+            else if (node != null && node.Parent == null) // If it's a root node (folder)
+            {
+                treeView.Nodes.Remove(node);
+            }
         }
 
         private void OnDeleteNodeClicked(object? sender, EventArgs e)
         {
             var node = treeView.SelectedNode;
-            if (node != null && IsFileNode(node))
+            if (node != null && node.Tag is string path)
             {
-                var filePath = node.Tag as string;
-                if (filePath != null && File.Exists(filePath))
+                if (File.Exists(path))
                 {
-                    DeleteFileRequested?.Invoke(this, filePath);
-                    File.Delete(filePath);
+                    DeleteFileRequested?.Invoke(this, path);
+                    File.Delete(path);
                     node.Remove();
+                }
+                else if (Directory.Exists(path))
+                {
+                    // Confirm folder delete
+                    var result = MessageBox.Show($"Are you sure you want to delete the folder '{path}' and all its contents?", "Delete Folder", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (result == DialogResult.Yes)
+                    {
+                        Directory.Delete(path, true); // recursive delete
+                        node.Remove();
+                    }
                 }
             }
         }
@@ -211,6 +281,105 @@ namespace WinForms_Docable
         public TreeNode? SelectedNode()
         {
             return treeView.SelectedNode;
+        }
+
+        // Helper to find a node by its path
+        private TreeNode? FindNodeByPath(string path)
+        {
+            foreach (TreeNode node in treeView.Nodes)
+            {
+                var found = FindNodeByPathRecursive(node, path);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
+        private TreeNode? FindNodeByPathRecursive(TreeNode node, string path)
+        {
+            if (node.Tag is string nodePath && string.Equals(nodePath, path, StringComparison.OrdinalIgnoreCase))
+                return node;
+            foreach (TreeNode child in node.Nodes)
+            {
+                var found = FindNodeByPathRecursive(child, path);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
+        private void AddNodeRecursive(string path, string parentPath = "")
+        {
+            TreeNode? parentNode = string.IsNullOrEmpty(parentPath) ? null : FindNodeByPath(parentPath);
+
+            if (File.Exists(path))
+            {
+                var node = new TreeNode(Path.GetFileName(path)) { Tag = path };
+                if (parentNode != null)
+                    parentNode.Nodes.Add(node);
+                else
+                    treeView.Nodes.Add(node);
+            }
+            else if (Directory.Exists(path))
+            {
+                var dirNode = new TreeNode(Path.GetFileName(path)) { Tag = path };
+                if (parentNode != null)
+                    parentNode.Nodes.Add(dirNode);
+                else
+                    treeView.Nodes.Add(dirNode);
+                foreach (var subDir in Directory.GetDirectories(path))
+                    AddNodeRecursive(subDir, path);
+                foreach (var file in Directory.GetFiles(path))
+                    AddNodeRecursive(file, path);
+            }
+        }
+
+        private void CopyWithStructure(string sourcePath, string targetRoot, string parentPath = "")
+        {
+            treeView.BeginUpdate();
+            if (File.Exists(sourcePath))
+            {
+                var targetFile = Path.Combine(targetRoot, Path.GetFileName(sourcePath));
+                Directory.CreateDirectory(Path.GetDirectoryName(targetFile)!);
+                File.Copy(sourcePath, targetFile, true);
+                AddNodeRecursive(targetFile, parentPath);
+            }
+            else if (Directory.Exists(sourcePath))
+            {
+                var folderName = Path.GetFileName(sourcePath);
+                var targetDir = Path.Combine(targetRoot, folderName);
+                CopyDirectoryRecursive(sourcePath, targetDir);
+                AddNodeRecursive(targetDir, parentPath);
+            }
+            treeView.EndUpdate();
+            var parentNode = FindNodeByPath(parentPath);
+            if (parentNode != null)
+                parentNode.Expand();
+            treeView.Refresh();
+        }
+
+        private void CopyDirectoryRecursive(string sourceDir, string targetDir)
+        {
+            Directory.CreateDirectory(targetDir);
+            foreach (var file in Directory.GetFiles(sourceDir))
+            {
+                var targetFile = Path.Combine(targetDir, Path.GetFileName(file));
+                File.Copy(file, targetFile, true);
+            }
+            foreach (var subDir in Directory.GetDirectories(sourceDir))
+            {
+                var targetSubDir = Path.Combine(targetDir, Path.GetFileName(subDir));
+                CopyDirectoryRecursive(subDir, targetSubDir);
+            }
+        }
+
+        private void OnCopyNodeClicked(object? sender, EventArgs e)
+        {
+            var node = treeView.SelectedNode;
+            if (node != null && node.Tag is string path)
+            {
+                var col = new System.Collections.Specialized.StringCollection();
+                col.Add(path);
+                Clipboard.SetFileDropList(col);
+            }
         }
     }
 }

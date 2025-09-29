@@ -65,7 +65,7 @@ namespace WinForms_Docable
                         _projectPanel.FileNodeActivated += ProjectPanel_FileNodeActivated;
                     }
                     if (_psPanel != null && !string.IsNullOrEmpty(_currentProjectPath))
-                        _psPanel.SetWorkingDirectory(_currentProjectPath);
+                        _psPanel.SetWorkingDirectory(_psPanel.GetCurrentDirectory());
 
                     ApplyThemeToAllDockContents(_darkMode);
                 }
@@ -133,6 +133,7 @@ namespace WinForms_Docable
             panel.FileNodeActivated -= ProjectPanel_FileNodeActivated;
             panel.FileNodeActivated += ProjectPanel_FileNodeActivated;
             panel.ApplyTheme(_darkMode);
+            panel.TargetRootDirectory = _currentProjectPath ?? string.Empty; // Ensure TargetRootDirectory is set
             return panel;
         }
 
@@ -140,7 +141,10 @@ namespace WinForms_Docable
         {
             var panel = new PowerShellPanel();
             if (!string.IsNullOrEmpty(_currentProjectPath))
+            {
                 panel.SetWorkingDirectory(_currentProjectPath);
+                panel.ShowProjectDirectory();
+            }
             panel.ApplyTheme(_darkMode);
             return panel;
         }
@@ -165,7 +169,7 @@ namespace WinForms_Docable
             _projectPanel = CreateProjectPanel();
             _projectPanel.Show(dockPanel, DockState.DockLeft);
 
-            new ToolWindow("Right Panel").Show(dockPanel, DockState.DockRight);
+           // new ToolWindow("Right Panel").Show(dockPanel, DockState.DockRight);
 
             _psPanel = CreatePowerShellPanel();
             _psPanel.Show(dockPanel, DockState.DockBottomAutoHide);
@@ -197,17 +201,19 @@ namespace WinForms_Docable
 
             // Ensure new editors follow current theme
             editor.ApplyTheme(_darkMode);
+
         }
 
 
 
         public object Properties { get; private set; }
 
+        private ToolStripMenuItem _optionsMenu;
+        private ToolStripMenuItem _saveLayoutMenuItem;
+
         private void InitializeMenu()
         {
             _menuStrip = new MenuStrip();
-            //use this to customize the menu strip colors if needed
-            // _menuStrip.Renderer = new ToolStripProfessionalRenderer(new DarkColorTable());
 
             // File
             _fileMenu = new ToolStripMenuItem("File");
@@ -251,19 +257,82 @@ namespace WinForms_Docable
             _mirrorMenu = new ToolStripMenuItem("Mirror Project");
             _mirrorMenu.DropDownItems.AddRange(new ToolStripItem[]
             {
-                new ToolStripMenuItem("Sync Panels", null, (s, e) => MessageBox.Show("Sync Panels clicked")),
-                new ToolStripMenuItem("Clear Panels", null, (s, e) => MessageBox.Show("Clear Panels clicked"))
+                new ToolStripMenuItem("Open Mirror", null, OnOpenMirrorClicked),
+                new ToolStripMenuItem("Close Mirror", null, OnCloseMirrorClicked)
             });
 
+            // Options menu with Save Layout
+            _optionsMenu = new ToolStripMenuItem("Options");
+            _saveLayoutMenuItem = new ToolStripMenuItem("Save Layout", null, OnSaveLayoutClicked);
+            _optionsMenu.DropDownItems.Add(_saveLayoutMenuItem);
+
             // Add menus to the menu strip
-            _menuStrip.Items.AddRange(new ToolStripItem[] { _fileMenu!, _viewMenu, _mirrorMenu });
+            _menuStrip.Items.AddRange(new ToolStripItem[] { _fileMenu!, _viewMenu, _mirrorMenu, _optionsMenu });
             this.MainMenuStrip = _menuStrip;
             this.Controls.Add(_menuStrip);
 
             UpdateFileMenuState();
         }
 
+        private void OnSaveLayoutClicked(object? sender, EventArgs e)
+        {
+            var layoutPath = Path.Combine(AppContext.BaseDirectory, "layout.xml");
+            dockPanel.SaveAsXml(layoutPath);
+            MessageBox.Show("Layout saved.", "Save Layout", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
 
+        private void OnCloseMirrorClicked(object? sender, EventArgs e)
+        {
+            var rightPanel = dockPanel.Contents
+                .FirstOrDefault(c => c.DockHandler.TabText == "Right Panel") as ToolWindow;
+            rightPanel?.Close();
+        }
+
+
+        private void OnOpenMirrorClicked(object? sender, EventArgs e)
+        {
+            using var dlg = new FolderBrowserDialog
+            {
+                Description = "Select a folder to display in the Right Panel"
+            };
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                var rightPanel = dockPanel.Contents
+                    .OfType<ToolWindow>()
+                    .FirstOrDefault(tw => tw.Text == "Right Panel");
+                if (rightPanel == null)
+                {
+                    rightPanel = new ToolWindow("Right Panel");
+                    if (rightPanel is IThemedContent themed)
+                        themed.ApplyTheme(_darkMode);
+                    rightPanel.Show(dockPanel, DockState.DockRight);
+                }
+                rightPanel.LoadFolderTree(dlg.SelectedPath);
+                rightPanel.Activate();
+
+                rightPanel.FileNodeActivated -= RightPanel_FileNodeActivated;
+                rightPanel.FileNodeActivated += RightPanel_FileNodeActivated;
+                rightPanel.FileNodeCloseRequested -= RightPanel_FileNodeCloseRequested;
+                rightPanel.FileNodeCloseRequested += RightPanel_FileNodeCloseRequested;
+
+              
+            }
+        }
+
+        private void RightPanel_FileNodeActivated(object? sender, string filePath)
+        {
+            OpenFileInEditor(filePath);
+
+        }
+
+
+        private void RightPanel_FileNodeCloseRequested(object? sender, string filePath)
+        {
+            if (_openEditors.TryGetValue(filePath, out var editor))
+            {
+                editor.Close();
+            }
+        }
 
         private void UpdateFileMenuState()
         {
@@ -277,7 +346,8 @@ namespace WinForms_Docable
         {
             using var dlg = new FolderBrowserDialog
             {
-                Description = "Select a project folder to load into the Project Explorer"
+                Description = "Select a project folder to load into the Project Explorer",
+                SelectedPath = _currentProjectPath?.ToString() ?? @"C:\"
             };
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
@@ -301,7 +371,7 @@ namespace WinForms_Docable
             using (var dialog = new FolderBrowserDialog
             {
                 Description = "Select the parent folder for your new project",
-                SelectedPath = rootPath?.ToString() ?? ""
+                SelectedPath = _currentProjectPath?.ToString() ?? ""
             })
             {
                 if (dialog.ShowDialog() == DialogResult.OK)
@@ -354,6 +424,7 @@ namespace WinForms_Docable
         
         private void OnSaveClicked(object? sender, EventArgs e)
         {
+            // Always use _currentProjectPath (the project folder) for saving
             if (string.IsNullOrEmpty(_currentProjectPath)) return;
             if (string.IsNullOrEmpty(_currentTreeSavePath))
             {
@@ -361,7 +432,17 @@ namespace WinForms_Docable
                 return;
             }
             EnsureProjectPanel();
-            _projectPanel!.SaveTreeToFile(_currentTreeSavePath!);
+            // Save only the project tree, not the mirror
+            if (_projectPanel != null)
+            {
+                // Only reload if the currently loaded folder is NOT the project folder
+                var rootNode = _projectPanel.SelectedNode();
+                if (rootNode == null || !(rootNode.Tag is string tag) || !string.Equals(tag, _currentProjectPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    _projectPanel.LoadFromDirectory(_currentProjectPath);
+                }
+                _projectPanel.SaveTreeToFile(_currentTreeSavePath!);
+            }
         }
 
         private void OnSaveAsClicked(object? sender, EventArgs e)
@@ -420,10 +501,15 @@ namespace WinForms_Docable
                 {
                     DockAreas = DockAreas.DockLeft,
                     AllowEndUserDocking = false,
-                    CloseButton = false
+                    CloseButton = false,
+                    TargetRootDirectory = _currentProjectPath ?? string.Empty // Ensure TargetRootDirectory is set
                 };
                 _projectPanel.FileNodeActivated += ProjectPanel_FileNodeActivated;
                 _projectPanel.Show(dockPanel, DockState.DockLeft);
+            }
+            else
+            {
+                _projectPanel.TargetRootDirectory = _currentProjectPath ?? string.Empty; // Update if project path changes
             }
         }
 
