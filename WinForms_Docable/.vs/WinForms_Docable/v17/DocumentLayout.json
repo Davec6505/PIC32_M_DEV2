@@ -3,20 +3,12 @@
   "WorkspaceRootPath": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{9DCE4650-E3C7-4DA8-8D9C-9DF2250AD825}|WinForms_Docable\\WinForms_Docable.csproj|c:\\users\\davec\\git\\pic32_m_dev2\\winforms_docable\\winforms_docable\\powershellpanel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9DCE4650-E3C7-4DA8-8D9C-9DF2250AD825}|WinForms_Docable\\WinForms_Docable.csproj|solutionrelative:winforms_docable\\powershellpanel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{9DCE4650-E3C7-4DA8-8D9C-9DF2250AD825}|WinForms_Docable\\WinForms_Docable.csproj|c:\\users\\davec\\git\\pic32_m_dev2\\winforms_docable\\winforms_docable\\dependancies\\makefiles\\makefile_root||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{9DCE4650-E3C7-4DA8-8D9C-9DF2250AD825}|WinForms_Docable\\WinForms_Docable.csproj|solutionrelative:winforms_docable\\dependancies\\makefiles\\makefile_root||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9DCE4650-E3C7-4DA8-8D9C-9DF2250AD825}|WinForms_Docable\\WinForms_Docable.csproj|c:\\users\\davec\\git\\pic32_m_dev2\\winforms_docable\\winforms_docable\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9DCE4650-E3C7-4DA8-8D9C-9DF2250AD825}|WinForms_Docable\\WinForms_Docable.csproj|solutionrelative:winforms_docable\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9DCE4650-E3C7-4DA8-8D9C-9DF2250AD825}|WinForms_Docable\\WinForms_Docable.csproj|c:\\users\\davec\\git\\pic32_m_dev2\\winforms_docable\\winforms_docable\\projecttreepanel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9DCE4650-E3C7-4DA8-8D9C-9DF2250AD825}|WinForms_Docable\\WinForms_Docable.csproj|solutionrelative:winforms_docable\\projecttreepanel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9DCE4650-E3C7-4DA8-8D9C-9DF2250AD825}|WinForms_Docable\\WinForms_Docable.csproj|c:\\users\\davec\\git\\pic32_m_dev2\\winforms_docable\\winforms_docable\\toolwindow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9DCE4650-E3C7-4DA8-8D9C-9DF2250AD825}|WinForms_Docable\\WinForms_Docable.csproj|solutionrelative:winforms_docable\\toolwindow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -55,39 +47,14 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "PowerShellPanel.cs",
-              "DocumentMoniker": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\WinForms_Docable\\PowerShellPanel.cs",
-              "RelativeDocumentMoniker": "WinForms_Docable\\PowerShellPanel.cs",
-              "ToolTip": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\WinForms_Docable\\PowerShellPanel.cs",
-              "RelativeToolTip": "WinForms_Docable\\PowerShellPanel.cs",
-              "ViewState": "AgIAAC4AAAAAAAAAAAAQwC8BAAAkAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-29T04:43:21.568Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "ToolWindow.cs",
-              "DocumentMoniker": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\WinForms_Docable\\ToolWindow.cs",
-              "RelativeDocumentMoniker": "WinForms_Docable\\ToolWindow.cs",
-              "ToolTip": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\WinForms_Docable\\ToolWindow.cs",
-              "RelativeToolTip": "WinForms_Docable\\ToolWindow.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAA/AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-28T20:13:14.349Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "ProjectTreePanel.cs",
-              "DocumentMoniker": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\WinForms_Docable\\ProjectTreePanel.cs",
-              "RelativeDocumentMoniker": "WinForms_Docable\\ProjectTreePanel.cs",
-              "ToolTip": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\WinForms_Docable\\ProjectTreePanel.cs",
-              "RelativeToolTip": "WinForms_Docable\\ProjectTreePanel.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAABJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-28T06:39:10.202Z",
+              "Title": "Makefile_Root",
+              "DocumentMoniker": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\WinForms_Docable\\dependancies\\makefiles\\Makefile_Root",
+              "RelativeDocumentMoniker": "WinForms_Docable\\dependancies\\makefiles\\Makefile_Root",
+              "ToolTip": "C:\\Users\\davec\\GIT\\PIC32_M_DEV2\\WinForms_Docable\\WinForms_Docable\\dependancies\\makefiles\\Makefile_Root",
+              "RelativeToolTip": "WinForms_Docable\\dependancies\\makefiles\\Makefile_Root",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-09-29T06:04:48.736Z",
               "EditorCaption": ""
             },
             {

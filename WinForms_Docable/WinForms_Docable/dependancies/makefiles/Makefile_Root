@@ -1,6 +1,6 @@
 # Simple Makefile for PIC32MZ project
 # Name of the project binary
-MODULE     := CS21
+MODULE     := CS23
 
 # Device configuration
 # The device is expected to be a PIC32MZ family device.
@@ -16,14 +16,14 @@ DEVICE     := 32MZ2048EFH064
 # Cross-platform compiler and DFP paths
 ifeq ($(OS),Windows_NT)
     COMPILER_LOCATION := C:/Program Files/Microchip/xc32/v4.60/bin
-	DFP_LOCATION := C:/Users/Automation/.mchp_packs
- #   DFP_LOCATION := C:/Program Files/Microchip/MPLABX/v6.25/packs
+#	DFP_LOCATION := C:/Users/Automation/.mchp_packs
+    DFP_LOCATION := C:/Program Files/Microchip/MPLABX/v6.25/packs
 else
     COMPILER_LOCATION := /opt/microchip/xc32/v4.60/bin
     DFP_LOCATION := /opt/microchip/mplabx/v6.25/packs
 endif
-#DFP := $(DFP_LOCATION)/Microchip/PIC32MZ-EF_DFP/1.4.168
-DFP := $(DFP_LOCATION)/Microchip/PIC32MZ-EF_DFP/1.5.173
+DFP := $(DFP_LOCATION)/Microchip/PIC32MZ-EF_DFP/1.4.168
+#DFP := $(DFP_LOCATION)/Microchip/PIC32MZ-EF_DFP/1.5.173
 #C:/Users/Automation/.mchp_packs/Microchip/PIC32MZ-EF_DFP/1.5.173
 
 # Simple Unix-style build system
