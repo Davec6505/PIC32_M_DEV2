@@ -11,12 +11,12 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("WinForms_Docable")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("PIC32_M_DEV")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4605c90f045d905ccbe0459c7d07bcf0fd790393")]
-[assembly: System.Reflection.AssemblyProductAttribute("WinForms_Docable")]
-[assembly: System.Reflection.AssemblyTitleAttribute("WinForms_Docable")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+616ac61c238931b1e7e223d829d273782c3f8d7c")]
+[assembly: System.Reflection.AssemblyProductAttribute("PIC32_M_DEV")]
+[assembly: System.Reflection.AssemblyTitleAttribute("PIC32_M_DEV")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
 [assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]
 [assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows7.0")]

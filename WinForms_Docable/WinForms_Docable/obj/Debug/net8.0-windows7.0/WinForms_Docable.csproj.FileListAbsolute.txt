@@ -375,9 +375,6 @@ C:\Users\davec\GIT\PIC32_M_DEV2\WinForms_Docable\WinForms_Docable\bin\Debug\net8
 C:\Users\davec\GIT\PIC32_M_DEV2\WinForms_Docable\WinForms_Docable\bin\Debug\net8.0-windows7.0\runtimes\win\lib\net8.0\System.ServiceProcess.ServiceController.dll
 C:\Users\davec\GIT\PIC32_M_DEV2\WinForms_Docable\WinForms_Docable\bin\Debug\net8.0-windows7.0\runtimes\win\lib\net8.0\System.Speech.dll
 C:\Users\davec\GIT\PIC32_M_DEV2\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\WinForms_Docable.csproj.AssemblyReference.cache
-C:\Users\davec\GIT\PIC32_M_DEV2\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\WinForms_Docable.Form1.resources
-C:\Users\davec\GIT\PIC32_M_DEV2\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\WinForms_Docable.PowerShellPanel.resources
-C:\Users\davec\GIT\PIC32_M_DEV2\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\WinForms_Docable.ProjectTreePanel.resources
 C:\Users\davec\GIT\PIC32_M_DEV2\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\WinForms_Docable.csproj.GenerateResource.cache
 C:\Users\davec\GIT\PIC32_M_DEV2\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\WinForms_Docable.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\davec\GIT\PIC32_M_DEV2\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\WinForms_Docable.AssemblyInfoInputs.cache
@@ -390,3 +387,6 @@ C:\Users\davec\GIT\PIC32_M_DEV2\WinForms_Docable\WinForms_Docable\obj\Debug\net8
 C:\Users\davec\GIT\PIC32_M_DEV2\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\WinForms_Docable.pdb
 C:\Users\davec\GIT\PIC32_M_DEV2\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\WinForms_Docable.genruntimeconfig.cache
 C:\Users\davec\GIT\PIC32_M_DEV2\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\ref\WinForms_Docable.dll
+C:\Users\davec\GIT\PIC32_M_DEV2\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\PIC32_M_DEV.Form1.resources
+C:\Users\davec\GIT\PIC32_M_DEV2\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\PIC32_M_DEV.PowerShellPanel.resources
+C:\Users\davec\GIT\PIC32_M_DEV2\WinForms_Docable\WinForms_Docable\obj\Debug\net8.0-windows7.0\PIC32_M_DEV.ProjectTreePanel.resources

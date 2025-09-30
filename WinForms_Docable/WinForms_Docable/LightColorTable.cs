@@ -1,4 +1,4 @@
-﻿namespace WinForms_Docable
+﻿namespace PIC32_M_DEV
 {
     public partial class Form1
     {

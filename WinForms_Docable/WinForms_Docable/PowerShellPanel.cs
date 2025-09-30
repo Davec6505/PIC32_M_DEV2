@@ -15,11 +15,11 @@ using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using System.Diagnostics;
 using System.Linq;
 using ICSharpCode.AvalonEdit.Editing;
-using WinForms_Docable.classes;
-using WinForms_Docable.Interfaces;
-using WinForms_Docable.Properties;
+using PIC32_M_DEV.classes;
+using PIC32_M_DEV.Interfaces;
+using PIC32_M_DEV.Properties;
 
-namespace WinForms_Docable
+namespace PIC32_M_DEV
 {
     public class PowerShellPanel : DockContent, IThemedContent
     {

@@ -1,4 +1,4 @@
-namespace WinForms_Docable.Interfaces
+namespace PIC32_M_DEV.Interfaces
 {
     public interface IThemedContent
     {

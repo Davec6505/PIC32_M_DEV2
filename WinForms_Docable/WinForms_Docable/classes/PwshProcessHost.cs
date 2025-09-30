@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Text;
 
-namespace WinForms_Docable.classes
+namespace PIC32_M_DEV.classes
 {
     // Out-of-proc host: runs full pwsh.exe and streams I/O
     public sealed class PwshProcessHost : IDisposable

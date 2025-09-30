@@ -1,4 +1,4 @@
-﻿namespace WinForms_Docable
+﻿namespace PIC32_M_DEV
 {
     partial class Form1
     {
@@ -24,6 +24,13 @@
 
         // Mirror menu (Sync, Clear)
         private ToolStripMenuItem? _mirrorMenu;
+
+        // Options menu (Save Layout)
+        private ToolStripMenuItem _optionsMenu;
+        private ToolStripMenuItem _saveLayoutMenuItem;
+        private ToolStripMenuItem _openMPLABXMenuItem;
+        private ToolStripMenuItem _openMCCStandaloneMenuItem;
+        private ToolStripMenuItem _openVSCodeMenuItem;
         /// <summary>
         ///  Clean up any resources being used.
         /// </summary>

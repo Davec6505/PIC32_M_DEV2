@@ -3,7 +3,7 @@ using System.Management.Automation;
 using System.Management.Automation.Host;
 
 
-namespace WinForms_Docable.classes
+namespace PIC32_M_DEV.classes
 {
     internal sealed class ScintillaPSHost : PSHost
     {

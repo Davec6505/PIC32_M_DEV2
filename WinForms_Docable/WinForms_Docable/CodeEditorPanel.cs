@@ -13,15 +13,20 @@ using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using System.Diagnostics;
 using System.Linq;
 using ICSharpCode.AvalonEdit.Editing;
-using WinForms_Docable.Properties;
+using PIC32_M_DEV.Properties;
 
-namespace WinForms_Docable
+namespace PIC32_M_DEV
 {
     // Ensure only one definition of CodeEditorPanel exists in this namespace.
     public class CodeEditorPanel : DockContent
     {
-        // Mark fields as 'readonly' and initialize them in the constructor.
-        public string FilePath { get; }
+        private string _filePath;
+        public string FilePath
+        {
+            get => _filePath;
+            private set => _filePath = value;
+        }
+
         private readonly ElementHost _host;
         private readonly TextEditor _avalon;
         private static bool _customHighlightingRegistered;
@@ -103,11 +108,11 @@ namespace WinForms_Docable
             IHighlightingDefinition? makefile = null;
             if (darkMode.HasValue.Equals(true))
             {
-                 makefile = LoadFromResource("WinForms_Docable.Highlighting.MakefileDark.xshd");
+                 makefile = LoadFromResource("PIC32_M_DEV.Highlighting.MakefileDark.xshd");
             }
             else
             {
-                 makefile = LoadFromResource("WinForms_Docable.Highlighting.Makefile.xshd");               
+                 makefile = LoadFromResource("PIC32_M_DEV.Highlighting.Makefile.xshd");               
             }
             if (makefile != null)
             {
@@ -121,11 +126,11 @@ namespace WinForms_Docable
             IHighlightingDefinition? gas = null;
             if (darkMode.HasValue.Equals(true))
             {
-                gas = LoadFromResource("WinForms_Docable.Highlighting.GASDark.xshd");
+                gas = LoadFromResource("PIC32_M_DEV.Highlighting.GASDark.xshd");
             }
             else
             {
-                 gas = LoadFromResource("WinForms_Docable.Highlighting.GAS.xshd");
+                 gas = LoadFromResource("PIC32_M_DEV.Highlighting.GAS.xshd");
             }
             if (gas != null)
             {
@@ -197,10 +202,13 @@ namespace WinForms_Docable
         }
 
         // Optional helper to save current content back to disk.
-        public void SaveToFile()
+        public void SaveToFile(string? newPath = null)
         {
-            File.WriteAllText(FilePath, _avalon.Text);
-            Text = Path.GetFileName(FilePath); // clear dirty mark
+            var path = newPath ?? FilePath;
+            File.WriteAllText(path, _avalon.Text);
+            // Optionally update FilePath if saving as a new file
+            if (newPath != null)
+                FilePath = newPath;
         }
 
         // THEME: Apply dark/light to the embedded AvalonEdit editor and host.
@@ -251,5 +259,7 @@ namespace WinForms_Docable
             var def = HighlightingLoader.Load(xshd, HighlightingManager.Instance);
             _avalon.SyntaxHighlighting = def;
         }
+
+
     }
 }

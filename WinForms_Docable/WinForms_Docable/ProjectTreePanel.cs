@@ -3,9 +3,9 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
-using WinForms_Docable.Interfaces;
+using PIC32_M_DEV.Interfaces;
 
-namespace WinForms_Docable
+namespace PIC32_M_DEV
 {
     public class ProjectTreePanel : DockContent, IThemedContent
     {
@@ -381,5 +381,7 @@ namespace WinForms_Docable
                 Clipboard.SetFileDropList(col);
             }
         }
+
+
     }
 }

@@ -2,17 +2,18 @@
 using System.Drawing; // ADDED
 using System.IO;
 using System.Linq;
+using System.Management.Automation;
 using System.Reflection;
 using System.Runtime;
 using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Forms.Integration;
 using WeifenLuo.WinFormsUI.Docking;
-using WinForms_Docable.classes;
-using WinForms_Docable.Interfaces;
-using WinForms_Docable.Properties;
+using PIC32_M_DEV.classes;
+using PIC32_M_DEV.Interfaces;
+using PIC32_M_DEV.Properties;
 
-namespace WinForms_Docable
+namespace PIC32_M_DEV
 {
     public partial class Form1 : Form
     {
@@ -32,14 +33,16 @@ namespace WinForms_Docable
 
         // THEME STATE
         private bool _darkMode = false; // default light
+
+        private EmptyProjectPanel? _emptyPanel;
+
         private object rootPath;
+        public object Properties { get; private set; }
 
         public Form1()
         {
             InitializeComponent();
 
-            // Set rootPath to the application's base directory
-            rootPath = AppContext.BaseDirectory;
             // Make this the MDI container for DockPanelSuite
             this.IsMdiContainer = true;
 
@@ -63,6 +66,8 @@ namespace WinForms_Docable
                     {
                         _projectPanel.FileNodeActivated -= ProjectPanel_FileNodeActivated;
                         _projectPanel.FileNodeActivated += ProjectPanel_FileNodeActivated;
+                        InitializeEventHandlers();
+
                     }
                     if (_psPanel != null && !string.IsNullOrEmpty(_currentProjectPath))
                         _psPanel.SetWorkingDirectory(_psPanel.GetCurrentDirectory());
@@ -73,15 +78,19 @@ namespace WinForms_Docable
                 {
                     InitializeDocking();
                     ApplyThemeToAllDockContents(_darkMode);
+                    InitializeEventHandlers();
+
                 }
             }
             else
             {
                 InitializeDocking();
                 ApplyThemeToAllDockContents(_darkMode);
-            }
-            InitializeEventHandlers();
+                InitializeEventHandlers();
 
+            }
+         //   InitializeEventHandlers();
+            
             // Load last project if exists
             loadLastLoaded_Project();
         }
@@ -93,9 +102,14 @@ namespace WinForms_Docable
                 _currentProjectPath = Settings.Default.projectPath;
                 EnsureProjectPanel();
                 _projectPanel!.LoadFromDirectory(_currentProjectPath);
+                ApplyThemeToAllDockContents(_darkMode); // Ensure theme after possible recreation
                 if (_psPanel != null)
                     _psPanel.SetWorkingDirectory(_currentProjectPath);
                 UpdateFileMenuState();
+            }
+            else
+            {
+                ShowEmptyPanel();
             }
         }
 
@@ -109,107 +123,6 @@ namespace WinForms_Docable
             foreach (var ed in _openEditors.Values.ToArray())
                 if (!ed.IsDisposed) ed.ApplyTheme(darkMode);
         }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-
-        }
-
-        private void LoadDefaultLayout()
-        {
-            // Recreate tool panes; no document placeholder
-            InitializeDocking();
-        }
-
-        // Add helpers
-        private ProjectTreePanel CreateProjectPanel()
-        {
-            var panel = new ProjectTreePanel
-            {
-                DockAreas = DockAreas.DockLeft,
-                AllowEndUserDocking = false,
-                CloseButton = false
-            };
-            panel.FileNodeActivated -= ProjectPanel_FileNodeActivated;
-            panel.FileNodeActivated += ProjectPanel_FileNodeActivated;
-            panel.ApplyTheme(_darkMode);
-            panel.TargetRootDirectory = _currentProjectPath ?? string.Empty; // Ensure TargetRootDirectory is set
-            return panel;
-        }
-
-        private PowerShellPanel CreatePowerShellPanel()
-        {
-            var panel = new PowerShellPanel();
-            if (!string.IsNullOrEmpty(_currentProjectPath))
-            {
-                panel.SetWorkingDirectory(_currentProjectPath);
-                panel.ShowProjectDirectory();
-            }
-            panel.ApplyTheme(_darkMode);
-            return panel;
-        }
-
-        // Update deserializer to use creators (so wiring happens on restore too)
-        private IDockContent GetContentFromPersistString(string persistString)
-        {
-            return persistString switch
-            {
-                "WinForms_Docable.ProjectTreePanel" or "Project Explorer" => (_projectPanel ??= CreateProjectPanel()),
-                "WinForms_Docable.PowerShellPanel" or "PowerShell" => (_psPanel ??= CreatePowerShellPanel()),
-                "Right Panel" => new ToolWindow("Right Panel"),
-                "Main Document" => new ToolWindow("Main Document"),
-                _ => new ToolWindow(persistString)
-            };
-        }
-
-        private void InitializeDocking()
-        {
-            // DO NOT recreate dockPanel; it already exists and has Theme set
-
-            _projectPanel = CreateProjectPanel();
-            _projectPanel.Show(dockPanel, DockState.DockLeft);
-
-           // new ToolWindow("Right Panel").Show(dockPanel, DockState.DockRight);
-
-            _psPanel = CreatePowerShellPanel();
-            _psPanel.Show(dockPanel, DockState.DockBottomAutoHide);
-
-            // No "Main Document" placeholder needed in MDI
-        }
-
-        private void ProjectPanel_FileNodeActivated(object? sender, string filePath)
-        {
-            OpenFileInEditor(filePath);
-        }
-
-        private void OpenFileInEditor(string filePath)
-        {
-            if (!File.Exists(filePath)) return;
-
-            if (_openEditors.TryGetValue(filePath, out var existing))
-            {
-                existing.Show(dockPanel, DockState.Document);
-                existing.Activate();
-                return;
-            }
-
-            var editor = new CodeEditorPanel(filePath);
-            _openEditors[filePath] = editor;
-            editor.FormClosed += (s, e) => _openEditors.Remove(filePath);
-            editor.Show(dockPanel, DockState.Document);
-            editor.Activate();
-
-            // Ensure new editors follow current theme
-            editor.ApplyTheme(_darkMode);
-
-        }
-
-
-
-        public object Properties { get; private set; }
-
-        private ToolStripMenuItem _optionsMenu;
-        private ToolStripMenuItem _saveLayoutMenuItem;
 
         private void InitializeMenu()
         {
@@ -263,8 +176,14 @@ namespace WinForms_Docable
 
             // Options menu with Save Layout
             _optionsMenu = new ToolStripMenuItem("Options");
-            _saveLayoutMenuItem = new ToolStripMenuItem("Save Layout", null, OnSaveLayoutClicked);
-            _optionsMenu.DropDownItems.Add(_saveLayoutMenuItem);
+            _optionsMenu.DropDownItems.AddRange(new ToolStripItem[]
+            {
+                new ToolStripMenuItem("Save Layout", null, OnSaveLayoutClicked),
+                new ToolStripMenuItem("MPLABX",null, OnOpenMPLABXClicked),
+                new ToolStripMenuItem("MCC Standalone",null,OnOpenMCCStandaloneClicked),
+                new ToolStripMenuItem("VS Code",null,OnOpenVSCodeClicked)
+            });
+           // _optionsMenu.DropDownItems.Add(_saveLayoutMenuItem);
 
             // Add menus to the menu strip
             _menuStrip.Items.AddRange(new ToolStripItem[] { _fileMenu!, _viewMenu, _mirrorMenu, _optionsMenu });
@@ -272,6 +191,27 @@ namespace WinForms_Docable
             this.Controls.Add(_menuStrip);
 
             UpdateFileMenuState();
+        }
+
+        private void OnOpenVSCodeClicked(object? sender, EventArgs e)
+        {
+            var scr = new scripts();
+            scr.launch("vscode");
+            scr.alert_changes(Settings.Default.mirrorPath);
+        }
+
+        private void OnOpenMCCStandaloneClicked(object? sender, EventArgs e)
+        {
+            var scr = new scripts();
+            scr.launch("startMcc");
+            scr.alert_changes(Settings.Default.mirrorPath);
+        }
+
+        private void OnOpenMPLABXClicked(object? sender, EventArgs e)
+        {
+            var scr = new scripts();
+            scr.launch("startMPLABX");
+            scr.alert_changes(Settings.Default.mirrorPath);
         }
 
         private void OnSaveLayoutClicked(object? sender, EventArgs e)
@@ -303,9 +243,10 @@ namespace WinForms_Docable
                 if (rightPanel == null)
                 {
                     rightPanel = new ToolWindow("Right Panel");
+                    rightPanel.Show(dockPanel, DockState.DockRight);
+                    
                     if (rightPanel is IThemedContent themed)
                         themed.ApplyTheme(_darkMode);
-                    rightPanel.Show(dockPanel, DockState.DockRight);
                 }
                 rightPanel.LoadFolderTree(dlg.SelectedPath);
                 rightPanel.Activate();
@@ -355,6 +296,7 @@ namespace WinForms_Docable
                 _currentTreeSavePath = null; // reset save path
                 EnsureProjectPanel();
                 _projectPanel!.LoadFromDirectory(_currentProjectPath);
+                ApplyThemeToAllDockContents(_darkMode); // Ensure theme after possible recreation
 
                 // Point PowerShell to the selected project's folder
                 _psPanel?.SetWorkingDirectory(_currentProjectPath);
@@ -412,7 +354,7 @@ namespace WinForms_Docable
                     _currentTreeSavePath = null; // reset save path
                     EnsureProjectPanel();
                     _projectPanel!.LoadFromDirectory(_currentProjectPath);
-
+                    ApplyThemeToAllDockContents(_darkMode); // Ensure theme after possible recreation
                 }
             }
 
@@ -424,77 +366,127 @@ namespace WinForms_Docable
         
         private void OnSaveClicked(object? sender, EventArgs e)
         {
-            // Always use _currentProjectPath (the project folder) for saving
-            if (string.IsNullOrEmpty(_currentProjectPath)) return;
-            if (string.IsNullOrEmpty(_currentTreeSavePath))
+            var editor = GetActiveEditor();
+            if (editor != null)
             {
-                OnSaveAsClicked(sender, e);
-                return;
+                editor.SaveToFile();
             }
-            EnsureProjectPanel();
-            // Save only the project tree, not the mirror
-            if (_projectPanel != null)
+            else 
             {
-                // Only reload if the currently loaded folder is NOT the project folder
-                var rootNode = _projectPanel.SelectedNode();
-                if (rootNode == null || !(rootNode.Tag is string tag) || !string.Equals(tag, _currentProjectPath, StringComparison.OrdinalIgnoreCase))
-                {
-                    _projectPanel.LoadFromDirectory(_currentProjectPath);
-                }
-                _projectPanel.SaveTreeToFile(_currentTreeSavePath!);
+                MessageBox.Show("No file currently open in editor.");
             }
         }
 
         private void OnSaveAsClicked(object? sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(_currentProjectPath)) return;
-            using var dlg = new SaveFileDialog
-            {
-                Title = "Save Project Tree As",
-                Filter = "Tree Export (*.tree.txt)|*.tree.txt|All Files (*.*)|*.*",
-                FileName = "Project.tree.txt"
-            };
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-            {
-                _currentTreeSavePath = dlg.FileName;
-                EnsureProjectPanel();
-                _projectPanel!.SaveTreeToFile(_currentTreeSavePath);
-            }
-        }
-
-        private void OnCloseProjectClicked(object? sender, EventArgs e)
-        {
-            EnsureProjectPanel();
-
-            var selectedNode = _projectPanel!.SelectedNode();
-
+            var selectedNode = _projectPanel?.SelectedNode();
             if (selectedNode == null)
             {
-                MessageBox.Show("Please select a project node to close.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Please select a node in the Project Explorer to save.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
-            if (selectedNode.Parent != null)
+            // Check if the node is a file node
+            bool isFileNode = false;
+            if (selectedNode != null && _projectPanel != null)
             {
-                MessageBox.Show("Please select a top-level project node.", "Invalid Selection", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
+                var method = typeof(ProjectTreePanel).GetMethod("IsFileNode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (method != null)
+                {
+                    isFileNode = (bool)method.Invoke(_projectPanel, new object[] { selectedNode });
+                }
             }
 
-            // Remove the selected project node
-            _projectPanel.RemoveSelectedNode();
-
-            // Optionally clear related state if the closed project was the current one
-            if (_currentProjectPath == selectedNode.Tag as string)
+            if (isFileNode)
             {
-                _currentProjectPath = null;
-                _currentTreeSavePath = null;
-                UpdateFileMenuState();
+                // Save As for file node
+                var filePath = selectedNode.Tag as string;
+                var editor = GetActiveEditor();
+                if (editor == null)
+                {
+                    MessageBox.Show("No file currently open in editor.");
+                    return;
+                }
+
+                using var dlg = new SaveFileDialog
+                {
+                    Title = "Save File As",
+                    Filter = "All Files (*.*)|*.*",
+                    FileName = Path.GetFileName(editor.FilePath)
+                };
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    editor.SaveToFile(dlg.FileName);
+                    _projectPanel.LoadFromDirectory(_currentProjectPath);
+                }
             }
+            else
+            {
+                // Save As for folder node (project/folder)
+                using var fldr = new FolderBrowserDialog()
+                {
+                    Description = "Select the parent folder for the new project/folder"
+                };
+                if (fldr.ShowDialog() == DialogResult.OK && !string.IsNullOrEmpty(fldr.SelectedPath))
+                {
+                    string parentPath = fldr.SelectedPath;
+                    string newFolderName = Microsoft.VisualBasic.Interaction.InputBox(
+                        "Enter a name for your new folder:", "Save As Folder", "NewFolder");
+                    if (string.IsNullOrWhiteSpace(newFolderName))
+                    {
+                        MessageBox.Show("Folder name cannot be empty.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    string newFolderPath = Path.Combine(parentPath, newFolderName);
+                    if (Directory.Exists(newFolderPath))
+                    {
+                        MessageBox.Show("A folder with this name already exists.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    Directory.CreateDirectory(newFolderPath);
+
+                    // Copy contents from the selected node's folder to the new folder
+                    string sourceFolder = selectedNode.Tag as string ?? _currentProjectPath ?? "";
+                    CopyDirectoryRecursive(sourceFolder, newFolderPath);
+
+                    MessageBox.Show($"Folder saved as: {newFolderPath}");
+                    _projectPanel.LoadFromDirectory(newFolderPath);
+                }
+                else
+                {
+                    MessageBox.Show("Please select a valid parent folder.", "No Folder Selected", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        }
+        private void CopyDirectoryRecursive(string sourceDir, string targetDir)
+        {
+            foreach (var dir in Directory.GetDirectories(sourceDir, "*", SearchOption.AllDirectories))
+            {
+                Directory.CreateDirectory(dir.Replace(sourceDir, targetDir));
+            }
+            foreach (var file in Directory.GetFiles(sourceDir, "*.*", SearchOption.AllDirectories))
+            {
+                File.Copy(file, file.Replace(sourceDir, targetDir), true);
+            }
+        }
+        private void OnCloseProjectClicked(object? sender, EventArgs e)
+        {
+            ShowEmptyPanel();
+            _currentProjectPath = null;
+            _currentTreeSavePath = null;
+            UpdateFileMenuState();
         }
 
 
         private void EnsureProjectPanel()
         {
+            // Remove empty panel if present
+            if (_emptyPanel != null && !_emptyPanel.IsDisposed)
+            {
+                _emptyPanel.Close();
+                _emptyPanel = null;
+            }
+
             if (_projectPanel == null || _projectPanel.IsDisposed)
             {
                 _projectPanel = new ProjectTreePanel
@@ -513,40 +505,22 @@ namespace WinForms_Docable
             }
         }
 
-        // THEME: Apply dark/light to the whole WinForms app and DockPanel
-        private void ApplyAppTheme(bool darkMode)
+        private void ShowEmptyPanel()
         {
-            // Do NOT set dockPanel.Theme here
-            ApplyNonDockPanelTheme(darkMode);
-
-            foreach (var ed in _openEditors.Values.ToArray())
+            // Remove project panel if present
+            if (_projectPanel != null && !_projectPanel.IsDisposed)
             {
-                if (!ed.IsDisposed) ed.ApplyTheme(darkMode);
+                _projectPanel.Close();
+                _projectPanel = null;
             }
-
-            ApplyWinFormsThemeRecursive(this, darkMode);
-            if (_darkModeMenuItem != null) _darkModeMenuItem.Checked = darkMode;
+            if (_emptyPanel == null || _emptyPanel.IsDisposed)
+            {
+                _emptyPanel = new EmptyProjectPanel();
+                _emptyPanel.Show(dockPanel, DockState.DockLeft);
+                _emptyPanel.ApplyTheme(_darkMode);
+            }
         }
 
-        private static void ApplyWinFormsThemeRecursive(Control root, bool darkMode)
-        {
-            // Skip DockPanel as it is themed by DockPanelSuite
-            if (root is DockPanel) return;
-
-            if (root is ToolStrip ts)
-            {
-                ts.BackColor = darkMode ? Color.FromArgb(45, 45, 48) : SystemColors.Control;
-                ts.ForeColor = darkMode ? Color.Gainsboro : SystemColors.ControlText;
-            }
-            else
-            {
-                root.BackColor = darkMode ? Color.FromArgb(37, 37, 38) : SystemColors.Control;
-                root.ForeColor = darkMode ? Color.Gainsboro : SystemColors.ControlText;
-            }
-
-            foreach (Control child in root.Controls)
-                ApplyWinFormsThemeRecursive(child, darkMode);
-        }
         private void ToggleTheme(bool darkMode)
         {
             this.SuspendLayout();
@@ -568,11 +542,11 @@ namespace WinForms_Docable
             if (File.Exists(layoutPath))
             {
                 try { dockPanel.LoadFromXml(layoutPath, _deserializeDockContent); }
-                catch { LoadDefaultLayout(); }
+                catch { InitializeDocking(); }
             }
             else
             {
-                LoadDefaultLayout();
+                InitializeDocking();
             }
 
             dockPanel.DockLeftPortion = 0.25;
@@ -604,9 +578,9 @@ namespace WinForms_Docable
         private void InitializeEventHandlers()
         {
             _projectPanel.SaveFileRequested += (s, filePath) => {
-                var editor = GetActiveEditor();
-                if (editor != null)
-                    editor.SaveToFile();
+                if (_openEditors.TryGetValue(filePath, out var editor) && editor != null)
+                    editor.SaveToFile(); // This saves the actual file content
+                // Remove any call to _projectPanel.SaveTreeToFile(filePath);
             };
 
             _projectPanel.SaveFileAsRequested += (s, args) => {
@@ -633,8 +607,135 @@ namespace WinForms_Docable
 
               
            
-        // ... other event handlers unchanged ...
+
         }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            // You can add startup logic here if needed, or remove this method if not used in designer
+        }
+
+        private void LoadDefaultLayout()
+        {
+            InitializeDocking();
+        }
+
+        private void ApplyAppTheme(bool darkMode)
+        {
+            ApplyNonDockPanelTheme(darkMode);
+            foreach (var ed in _openEditors.Values.ToArray())
+            {
+                if (!ed.IsDisposed) ed.ApplyTheme(darkMode);
+            }
+            ApplyWinFormsThemeRecursive(this, darkMode);
+            if (_darkModeMenuItem != null) _darkModeMenuItem.Checked = darkMode;
+        }
+
+        private static void ApplyWinFormsThemeRecursive(Control root, bool darkMode)
+        {
+            if (root is DockPanel) return;
+            if (root is ToolStrip ts)
+            {
+                ts.BackColor = darkMode ? Color.FromArgb(45, 45, 48) : SystemColors.Control;
+                ts.ForeColor = darkMode ? Color.Gainsboro : SystemColors.ControlText;
+            }
+            else
+            {
+                root.BackColor = darkMode ? Color.FromArgb(37, 37, 38) : SystemColors.Control;
+                root.ForeColor = darkMode ? Color.Gainsboro : SystemColors.ControlText;
+            }
+            foreach (Control child in root.Controls)
+                ApplyWinFormsThemeRecursive(child, darkMode);
+        }
+
+        private void OpenFileInEditor(string filePath)
+        {
+            if (!File.Exists(filePath)) return;
+            if (_openEditors.TryGetValue(filePath, out var existing))
+            {
+                existing.Show(dockPanel, DockState.Document);
+                existing.Activate();
+                return;
+            }
+            var editor = new CodeEditorPanel(filePath);
+            _openEditors[filePath] = editor;
+            editor.FormClosed += (s, e) => _openEditors.Remove(filePath);
+            editor.Show(dockPanel, DockState.Document);
+            editor.Activate();
+            editor.ApplyTheme(_darkMode);
+        }
+
+        private IDockContent GetContentFromPersistString(string persistString)
+        {
+            return persistString switch
+            {
+                "PIC32_M_DEV.ProjectTreePanel" or "Project Explorer" => (_projectPanel ??= CreateProjectPanel()),
+                "PIC32_M_DEV.PowerShellPanel" or "PowerShell" => (_psPanel ??= CreatePowerShellPanel()),
+                "Right Panel" => new ToolWindow("Right Panel"),
+                "Main Document" => new ToolWindow("Main Document"),
+                _ => new ToolWindow(persistString)
+            };
+        }
+
+        private void ProjectPanel_FileNodeActivated(object? sender, string filePath)
+        {
+            OpenFileInEditor(filePath);
+        }
+
+        private void InitializeDocking()
+        {
+            if (_projectPanel != null && !_projectPanel.IsDisposed)
+            {
+                _projectPanel.Close();
+                _projectPanel = null;
+            }
+            if (_emptyPanel != null && !_emptyPanel.IsDisposed)
+            {
+                _emptyPanel.Close();
+                _emptyPanel = null;
+            }
+            if (!string.IsNullOrEmpty(_currentProjectPath) && Directory.Exists(_currentProjectPath))
+            {
+                _projectPanel = CreateProjectPanel();
+                _projectPanel.Show(dockPanel, DockState.DockLeft);
+            }
+            else
+            {
+                _emptyPanel = new EmptyProjectPanel();
+                _emptyPanel.Show(dockPanel, DockState.DockLeft);
+                _emptyPanel.ApplyTheme(_darkMode);
+            }
+            _psPanel = CreatePowerShellPanel();
+            _psPanel.Show(dockPanel, DockState.DockBottomAutoHide);
+        }
+
+        private ProjectTreePanel CreateProjectPanel()
+        {
+            var panel = new ProjectTreePanel
+            {
+                DockAreas = DockAreas.DockLeft,
+                AllowEndUserDocking = false,
+                CloseButton = false,
+                TargetRootDirectory = _currentProjectPath ?? string.Empty
+            };
+            panel.FileNodeActivated -= ProjectPanel_FileNodeActivated;
+            panel.FileNodeActivated += ProjectPanel_FileNodeActivated;
+            // panel.ApplyTheme(_darkMode); // Theme applied elsewhere
+            return panel;
+        }
+
+        private PowerShellPanel CreatePowerShellPanel()
+        {
+            var panel = new PowerShellPanel();
+            if (!string.IsNullOrEmpty(_currentProjectPath))
+            {
+                panel.SetWorkingDirectory(_currentProjectPath);
+                panel.ShowProjectDirectory();
+            }
+            panel.ApplyTheme(_darkMode);
+            return panel;
+        }
+
     }
 
 

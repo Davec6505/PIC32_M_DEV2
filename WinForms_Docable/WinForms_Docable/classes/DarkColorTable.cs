@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 
-namespace WinForms_Docable.classes
+namespace PIC32_M_DEV.classes
 {
     public sealed class DarkColorTable : ProfessionalColorTable
     {

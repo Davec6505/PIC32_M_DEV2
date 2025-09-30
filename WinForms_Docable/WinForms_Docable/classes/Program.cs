@@ -1,4 +1,4 @@
-namespace WinForms_Docable.classes
+namespace PIC32_M_DEV.classes
 {
     internal static class Program
     {
