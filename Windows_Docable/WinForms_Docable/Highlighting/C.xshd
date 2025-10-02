@@ -1,0 +1,118 @@
+﻿<?xml version="1.0"?>
+<SyntaxDefinition name="C" extensions=".c;.h"
+  xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+
+  <!-- Light theme palette (high contrast, VS-like) -->
+  <Color name="Comment" foreground="#008000" />
+  <Color name="Preprocessor" foreground="#800000" fontWeight="bold" />
+  <Color name="Keyword" foreground="#0000FF" fontWeight="bold" />
+  <Color name="Type" foreground="#2B91AF" />
+  <Color name="Number" foreground="#098658" />
+  <Color name="String" foreground="#A31515" />
+  <Color name="Char" foreground="#A31515" />
+  <Color name="Function" foreground="#000000" />
+
+  <RuleSet>
+  <!-- Strings first so '#' inside strings isn't a preprocessor -->
+  <Span color="String" begin="&quot;" end="&quot;" />
+  <Span color="Char" begin="'" end="'" />
+  <!-- Comments -->
+  <Span color="Comment" begin="//" end="\n">
+    <RuleSet />
+  </Span>
+  <Span color="Comment" begin="/\*" end="\*/">
+    <RuleSet />
+  </Span>
+
+  <!-- Numbers: hex, octal, decimal, float (C/C99 style) -->
+  <Rule color="Number">
+    \b0[xX][0-9a-fA-F]+(\.[0-9a-fA-F]+)?[pP][+-]?\d+\b
+    | \b0[0-7]+
+    | (\b\d+(\.\d*)?|\b\.\d+)([eE][+-]?\d+)?[fFlL]?\b
+  </Rule>
+
+  <!-- Preprocessor directives (color entire directive line, allow strings and comments inside) -->
+  <Span color="Preprocessor" begin="^[ \t]*[#][ \t]*(?:define|undef|if|ifdef|ifndef|elif|else|endif|include|error|pragma|line|warning)\b" end="\n">
+    <RuleSet>
+      <!-- Comments inside preprocessor lines -->
+      <Span color="Comment" begin="//" end="\n">
+        <RuleSet />
+      </Span>
+      <Span color="Comment" begin="/\*" end="\*/">
+        <RuleSet />
+      </Span>
+      <!-- Strings inside preprocessor lines -->
+      <Span color="String" begin="&quot;" end="&quot;" />
+      <Span color="String" begin="&lt;" end="&gt;" />
+    </RuleSet>
+  </Span>
+
+  <!-- Keywords -->
+  <Keywords color="Keyword">
+    <Word>if</Word>
+    <Word>else</Word>
+    <Word>switch</Word>
+    <Word>case</Word>
+    <Word>default</Word>
+    <Word>for</Word>
+    <Word>while</Word>
+    <Word>do</Word>
+    <Word>break</Word>
+    <Word>continue</Word>
+    <Word>return</Word>
+    <Word>goto</Word>
+    <Word>sizeof</Word>
+    <Word>typedef</Word>
+    <Word>struct</Word>
+    <Word>union</Word>
+    <Word>enum</Word>
+    <Word>const</Word>
+    <Word>volatile</Word>
+    <Word>static</Word>
+    <Word>extern</Word>
+    <Word>register</Word>
+    <Word>inline</Word>
+    <Word>restrict</Word>
+    <Word>asm</Word>
+    <Word>_Alignas</Word>
+    <Word>_Alignof</Word>
+    <Word>_Atomic</Word>
+    <Word>_Bool</Word>
+    <Word>_Complex</Word>
+    <Word>_Generic</Word>
+    <Word>_Imaginary</Word>
+    <Word>_Noreturn</Word>
+    <Word>_Static_assert</Word>
+    <Word>_Thread_local</Word>
+  </Keywords>
+
+  <!-- Function identifiers (exclude ALL C keywords and common type names when followed by '(') -->
+  <Rule color="Function">\b(?!(?:if|else|switch|case|default|for|while|do|break|continue|return|goto|sizeof|typedef|struct|union|enum|const|volatile|static|extern|register|inline|restrict|asm|_Alignas|_Alignof|_Atomic|_Bool|_Complex|_Generic|_Imaginary|_Noreturn|_Static_assert|_Thread_local|void|char|short|int|long|float|double|signed|unsigned|bool)\b)[A-Za-z_]\w*(?=\s*\()</Rule>
+
+  <!-- Types -->
+  <Keywords color="Type">
+    <Word>void</Word>
+    <Word>char</Word>
+    <Word>short</Word>
+    <Word>int</Word>
+    <Word>long</Word>
+    <Word>float</Word>
+    <Word>double</Word>
+    <Word>signed</Word>
+    <Word>unsigned</Word>
+    <Word>size_t</Word>
+    <Word>ptrdiff_t</Word>
+    <Word>wchar_t</Word>
+    <Word>bool</Word>
+    <Word>_Bool</Word>
+    <Word>int8_t</Word>
+    <Word>int16_t</Word>
+    <Word>int32_t</Word>
+    <Word>int64_t</Word>
+    <Word>uint8_t</Word>
+    <Word>uint16_t</Word>
+    <Word>uint32_t</Word>
+    <Word>uint64_t</Word>
+  </Keywords>
+  </RuleSet>
+</SyntaxDefinition>

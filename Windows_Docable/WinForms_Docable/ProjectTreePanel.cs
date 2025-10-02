@@ -1,9 +1,6 @@
-using System;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
-using WeifenLuo.WinFormsUI.Docking;
 using PIC32_M_DEV.Interfaces;
+using System.IO;
+using WeifenLuo.WinFormsUI.Docking;
 
 namespace PIC32_M_DEV
 {

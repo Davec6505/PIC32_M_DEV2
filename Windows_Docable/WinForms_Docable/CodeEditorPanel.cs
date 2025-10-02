@@ -1,19 +1,14 @@
-using WeifenLuo.WinFormsUI.Docking;
-using System;
-using System.IO;
-using System.Text;
-using System.Windows.Forms;
-using System.Windows.Forms.Integration;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Highlighting;
-using System.Windows.Media;
-using System.Reflection;
-using System.Xml;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
-using System.Diagnostics;
-using System.Linq;
-using ICSharpCode.AvalonEdit.Editing;
 using PIC32_M_DEV.Properties;
+using System.IO;
+using System.Reflection;
+using System.Text;
+using System.Windows.Forms.Integration;
+using System.Windows.Media;
+using System.Xml;
+using WeifenLuo.WinFormsUI.Docking;
 
 namespace PIC32_M_DEV
 {
@@ -32,7 +27,7 @@ namespace PIC32_M_DEV
         private static bool _customHighlightingRegistered;
 
         // Remove any duplicate constructors for CodeEditorPanel in this file.
-        public CodeEditorPanel(string filePath)
+        public CodeEditorPanel(string? filePath = null)
         {
             FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
             Text = Path.GetFileName(FilePath);
@@ -64,6 +59,9 @@ namespace PIC32_M_DEV
 
             ApplySyntaxHighlighting();
 
+            // Right-click context menu for Save / Close
+            InitializeEditorContextMenu();
+
             _avalon.TextChanged += (s, e) =>
             {
                 if (!Text.EndsWith("*", StringComparison.Ordinal))
@@ -76,15 +74,44 @@ namespace PIC32_M_DEV
             };
         }
 
+        private void InitializeEditorContextMenu()
+        {
+            var menu = new System.Windows.Controls.ContextMenu();
+
+            var saveItem = new System.Windows.Controls.MenuItem { Header = "Save" };
+            saveItem.Click += (s, e) =>
+            {
+                try
+                {
+                    SaveToFile();
+                    if (Text.EndsWith("*", StringComparison.Ordinal))
+                        Text = Text.TrimEnd('*');
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to save file: {ex.Message}", "Save Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            };
+
+            var closeItem = new System.Windows.Controls.MenuItem { Header = "Close" };
+            closeItem.Click += (s, e) =>
+            {
+                Close();
+            };
+
+            menu.Items.Add(saveItem);
+            menu.Items.Add(new System.Windows.Controls.Separator());
+            menu.Items.Add(closeItem);
+
+            _avalon.TextArea.ContextMenu = menu;
+        }
+
         private static void RegisterCustomHighlightings(bool? darkMode = null)
         {
-           
             if (_customHighlightingRegistered) return;
             _customHighlightingRegistered = true;
 
-
-
-            IHighlightingDefinition LoadFromResource(string resourceName)
+            IHighlightingDefinition? LoadFromResource(string resourceName)
             {
                 var asm = Assembly.GetExecutingAssembly();
                 using var s = asm.GetManifestResourceStream(resourceName);
@@ -94,25 +121,24 @@ namespace PIC32_M_DEV
                 try
                 {
                     var xshd = HighlightingLoader.LoadXshd(reader);
-                     return HighlightingLoader.Load(xshd, HighlightingManager.Instance);
-
+                    return HighlightingLoader.Load(xshd, HighlightingManager.Instance);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Failed to load syntax highlighting: {resourceName}: {ex.Message}","Error in Syntax Highlighting!",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                    MessageBox.Show($"Failed to load syntax highlighting: {resourceName}: {ex.Message}", "Error in Syntax Highlighting!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 return null;
             }
 
             // Makefile
             IHighlightingDefinition? makefile = null;
-            if (darkMode.HasValue.Equals(true))
+            if (darkMode == true)
             {
-                 makefile = LoadFromResource("PIC32_M_DEV.Highlighting.MakefileDark.xshd");
+                makefile = LoadFromResource("PIC32_M_DEV.Highlighting.MakefileDark.xshd");
             }
             else
             {
-                 makefile = LoadFromResource("PIC32_M_DEV.Highlighting.Makefile.xshd");               
+                makefile = LoadFromResource("PIC32_M_DEV.Highlighting.Makefile.xshd");
             }
             if (makefile != null)
             {
@@ -124,20 +150,38 @@ namespace PIC32_M_DEV
 
             // GAS/ASM
             IHighlightingDefinition? gas = null;
-            if (darkMode.HasValue.Equals(true))
+            if (darkMode == true)
             {
                 gas = LoadFromResource("PIC32_M_DEV.Highlighting.GASDark.xshd");
             }
             else
             {
-                 gas = LoadFromResource("PIC32_M_DEV.Highlighting.GAS.xshd");
+                gas = LoadFromResource("PIC32_M_DEV.Highlighting.GAS.xshd");
             }
             if (gas != null)
             {
                 HighlightingManager.Instance.RegisterHighlighting(
-                "GAS",
-                new[] { ".s", ".S", ".asm" },
-                gas);
+                    "GAS",
+                    new[] { ".s", ".S", ".asm" },
+                    gas);
+            }
+
+            // C/C++ Highlighting
+            IHighlightingDefinition? cHighlighting = null;
+            if (darkMode == true)
+            {
+                cHighlighting = LoadFromResource("PIC32_M_DEV.Highlighting.CDark.xshd");
+            }
+            else
+            {
+                cHighlighting = LoadFromResource("PIC32_M_DEV.Highlighting.C.xshd");
+            }
+            if (cHighlighting != null)
+            {
+                HighlightingManager.Instance.RegisterHighlighting(
+                    "C/C++",
+                    new[] { ".c", ".h" },
+                    cHighlighting);
             }
         }
 
@@ -241,7 +285,6 @@ namespace PIC32_M_DEV
             _avalon.TextArea.TextView.CurrentLineBorder = null;
 
             _avalon.LineNumbersForeground = new SolidColorBrush(darkMode ? System.Windows.Media.Color.FromRgb(190, 190, 190) : System.Windows.Media.Colors.Black);
-           // _avalon.Background = new SolidColorBrush(darkMode ? System.Windows.Media.Color.FromRgb(30, 30, 30) : System.Windows.Media.Colors.Black);
             // Optional: if you have theme-wide XSHD files, try to apply them.
             TryApplySyntaxTheme(darkMode);
         }

@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Highlighting\*.xshd">
-      <LogicalName>WinForms_Docable.Highlighting.%(Filename)%(Extension)</LogicalName>
+      <LogicalName>PIC32_M_DEV.Highlighting.%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
 

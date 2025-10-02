@@ -1,23 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using WeifenLuo.WinFormsUI.Docking;
-using System.Windows.Forms.Integration;
-using ICSharpCode.AvalonEdit;
-using ICSharpCode.AvalonEdit.Highlighting;
-using System.Windows.Media;
-using System.Reflection;
-using System.Xml;
-using ICSharpCode.AvalonEdit.Highlighting.Xshd;
-using System.Diagnostics;
-using System.Linq;
-using ICSharpCode.AvalonEdit.Editing;
 using PIC32_M_DEV.classes;
 using PIC32_M_DEV.Interfaces;
 using PIC32_M_DEV.Properties;
+using System.IO;
+using WeifenLuo.WinFormsUI.Docking;
 
 namespace PIC32_M_DEV
 {
@@ -31,6 +16,11 @@ namespace PIC32_M_DEV
 
         private int _inputStart;
         private string? _pendingWorkingDir;
+        private bool _suppressInitialOutput = false; // suppress pwsh banner/appdomain output
+        private string? _currentDir; // track current dir for prompt
+
+        // Marker to know when a command finished so we can draw next prompt
+        private const string PromptMarker = "[[__PWSH_PROMPT_READY__]]";
 
         public PowerShellPanel()
         {
@@ -53,8 +43,10 @@ namespace PIC32_M_DEV
             _pwsh.Output += OnPwshOutput;
             _pwsh.Error += OnPwshOutput;
 
-            AppendLine("pwsh process session started.");
-            _inputStart = _console.TextLength;
+            // Start with a clean prompt based on the project path (no banner)
+            _inputStart = 0;
+            _currentDir = GetCurrentDirectory();
+            ClearConsole();
 
             _console.KeyDown += OnConsoleKeyDown;
             _console.MouseDown += OnConsoleMouseDown;
@@ -63,6 +55,7 @@ namespace PIC32_M_DEV
 
         public void ShowProjectDirectory()
         {
+            _currentDir = GetCurrentDirectory();
             ClearConsole();
         }
 
@@ -84,17 +77,40 @@ namespace PIC32_M_DEV
             if (IsDisposed) return;
             if (InvokeRequired) { BeginInvoke(new Action<string>(OnPwshOutput), text); return; }
 
+            // Suppress the initial banner/appdomain output and show our own prompt instead
+            if (_suppressInitialOutput)
+            {
+                _suppressInitialOutput = false;
+                // After starting, ensure we show the prompt and working dir
+                _currentDir = string.IsNullOrWhiteSpace(_pendingWorkingDir) ? GetCurrentDirectory() : _pendingWorkingDir;
+                _pendingWorkingDir = null;
+                ClearConsole();
+                return;
+            }
+
+            // If the output contains our marker, split and draw the prompt
+            int markerIndex = text.IndexOf(PromptMarker, StringComparison.Ordinal);
+            if (markerIndex >= 0)
+            {
+                string before = text.Substring(0, markerIndex);
+                if (!string.IsNullOrEmpty(before))
+                    Append(before);
+
+                // Ensure we end with a single newline before next prompt (handle CR-only edge)
+                if (_console.TextLength > 0)
+                {
+                    char last = _console.Text[_console.TextLength - 1];
+                    if (last != '\n')
+                        Append(Environment.NewLine);
+                }
+
+                WritePrompt();
+                return;
+            }
+
             Append(text);
-            _inputStart = _console.TextLength;
             _console.SelectionStart = _console.TextLength;
             _console.ScrollToCaret();
-
-            if (!string.IsNullOrEmpty(_pendingWorkingDir))
-            {
-                var dir = _pendingWorkingDir;
-                _pendingWorkingDir = null;
-                ApplyWorkingDirectory(dir!, refreshPrompt: false);
-            }
         }
 
         private void Append(string text)
@@ -140,6 +156,16 @@ namespace PIC32_M_DEV
 
         private void AppendLine(string text) => Append(text + Environment.NewLine);
 
+        private void WritePrompt()
+        {
+            var dir = _currentDir ?? GetCurrentDirectory();
+            var prompt = string.IsNullOrWhiteSpace(dir) ? "> " : $"PS {dir}> ";
+            Append(prompt);
+            _inputStart = _console.TextLength;
+            _console.SelectionStart = _console.TextLength;
+            _console.ScrollToCaret();
+        }
+
         private void ClearConsole()
         {
             if (IsDisposed) return;
@@ -148,8 +174,8 @@ namespace PIC32_M_DEV
             _console.SelectionStart = 0;
             _inputStart = 0;
             _console.ScrollToCaret();
-            Append(GetCurrentDirectory());
-            _inputStart = _console.TextLength;
+            // Show prompt on the same line as input
+            WritePrompt();
         }
 
         private string GetInputText()
@@ -231,7 +257,6 @@ namespace PIC32_M_DEV
                 e.SuppressKeyPress = true;
                 var cmd = GetInputText();
 
-
                 //copy paste support
                 if (e.Control && e.KeyCode == Keys.C)
                 {
@@ -243,7 +268,7 @@ namespace PIC32_M_DEV
                     }
                     e.SuppressKeyPress = true;
                     AppendLine("^C (cancel not available for external pwsh host)");
-                    _inputStart = _console.TextLength;
+                    WritePrompt();
                     return;
                 }
 
@@ -264,7 +289,6 @@ namespace PIC32_M_DEV
                     if(cmd.Equals("clear", StringComparison.OrdinalIgnoreCase) || cmd.Equals("cls", StringComparison.OrdinalIgnoreCase))
                     {
                         ClearConsole();
-                        _inputStart = 0;
                         return;
                     }
 
@@ -279,16 +303,16 @@ namespace PIC32_M_DEV
                             var path = parts[1].Trim().Trim('\'', '"');
                             if (Directory.Exists(path))
                             {
-                                ApplyWorkingDirectory(path, refreshPrompt: true);
-                                AppendLine(path);
-                                _inputStart = _console.TextLength;
+                                _currentDir = path;
+                                // Move to next line (like real console), then change dir and ask for prompt
+                                Append(Environment.NewLine);
+                                _pwsh.SendLine($"Set-Location -LiteralPath {QuotePwsh(path)}; Write-Host -NoNewline '{PromptMarker}'");
                                 return;
                             }
                             else
                             {
-                               // AppendLine(cmd);
                                 AppendLine($"The system cannot find the path specified: {path}");
-                                _inputStart = _console.TextLength;
+                                WritePrompt();
                                 return;
                             }
                         }
@@ -300,9 +324,10 @@ namespace PIC32_M_DEV
                     }
                 }
 
-                AppendLine("");
-                _pwsh.SendLine(cmd);
-                _inputStart = _console.TextLength;
+                // Move to next line like the real console does when you press Enter
+                Append(Environment.NewLine);
+                // Send with a marker that lets us know when to draw the next prompt
+                _pwsh.SendLine($"{cmd}; Write-Host -NoNewline '{PromptMarker}'");
                 return;
             }
 
@@ -362,7 +387,7 @@ namespace PIC32_M_DEV
             {
                 e.SuppressKeyPress = true;
                 AppendLine("^C (cancel not available for external pwsh host)");
-                _inputStart = _console.TextLength;
+                WritePrompt();
                 return;
             }
 
@@ -382,10 +407,11 @@ namespace PIC32_M_DEV
             if (!_pwsh.IsRunning)
             {
                 _pendingWorkingDir = path;
+                _currentDir = path;
                 return;
             }
 
-            ApplyWorkingDirectory(path, refreshPrompt: false);
+            ApplyWorkingDirectory(path, refreshPrompt: true);
         }
 
         private static string QuotePwsh(string path) => "'" + path.Replace("'", "''") + "'";
@@ -394,9 +420,9 @@ namespace PIC32_M_DEV
         {
             try
             {
-                _pwsh.SendLine($"Set-Location -LiteralPath {QuotePwsh(GetCurrentDirectory())}");
-                if (refreshPrompt && string.IsNullOrEmpty(GetInputText()))
-                    ReplaceInput(string.Empty);
+                _currentDir = path;
+                _pwsh.SendLine($"Set-Location -LiteralPath {QuotePwsh(path)}; Write-Host -NoNewline '{PromptMarker}'");
+                // Prompt will be written when we see the marker
             }
             catch (Exception ex)
             {
@@ -425,8 +451,20 @@ namespace PIC32_M_DEV
             base.OnHandleCreated(e);
             if (!_pwsh.IsRunning)
             {
+                // Suppress the initial banner so we can show our project prompt first
+                _suppressInitialOutput = true;
                 _pwsh.Start("-NoLogo -NoExit");
+                // Make output simple and disable PSReadLine/prompt so we can control it
                 _pwsh.SendLine("$PSStyle.OutputRendering = 'PlainText'");
+                _pwsh.SendLine("Remove-Module PSReadLine -ErrorAction SilentlyContinue");
+                _pwsh.SendLine("function global:prompt {''}");
+
+                var projectDir = GetCurrentDirectory();
+                if (!string.IsNullOrWhiteSpace(projectDir) && Directory.Exists(projectDir))
+                {
+                    _pendingWorkingDir = projectDir;
+                    _currentDir = projectDir;
+                }
             }
         }
 
@@ -434,7 +472,7 @@ namespace PIC32_M_DEV
         {
             try
             {
-                return Settings.Default.projectPath;//Directory.GetCurrentDirectory();
+                return Settings.Default.projectPath;
             }
             catch
             {
