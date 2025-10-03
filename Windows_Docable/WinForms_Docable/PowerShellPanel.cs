@@ -306,7 +306,7 @@ namespace PIC32_M_DEV
                                 _currentDir = path;
                                 // Move to next line (like real console), then change dir and ask for prompt
                                 Append(Environment.NewLine);
-                                _pwsh.SendLine($"Set-Location -LiteralPath {QuotePwsh(path)}; Write-Host -NoNewline '{PromptMarker}'");
+                                _pwsh.SendLine($"Set-Location -LiteralPath {QuotePwsh(path)}; | Out-Null");// Write-Host -NoNewline '{PromptMarker}'");
                                 return;
                             }
                             else
@@ -327,7 +327,7 @@ namespace PIC32_M_DEV
                 // Move to next line like the real console does when you press Enter
                 Append(Environment.NewLine);
                 // Send with a marker that lets us know when to draw the next prompt
-                _pwsh.SendLine($"{cmd}; Write-Host -NoNewline '{PromptMarker}'");
+                _pwsh.SendLine($"{cmd};");// Write-Host -NoNewline '{PromptMarker}'");
                 return;
             }
 
@@ -421,7 +421,7 @@ namespace PIC32_M_DEV
             try
             {
                 _currentDir = path;
-                _pwsh.SendLine($"Set-Location -LiteralPath {QuotePwsh(path)}; Write-Host -NoNewline '{PromptMarker}'");
+                _pwsh.SendLine($"Set-Location -LiteralPath {QuotePwsh(path)};");// Write-Host -NoNewline '{PromptMarker}'");
                 // Prompt will be written when we see the marker
             }
             catch (Exception ex)
@@ -455,10 +455,10 @@ namespace PIC32_M_DEV
                 _suppressInitialOutput = true;
                 _pwsh.Start("-NoLogo -NoExit");
                 // Make output simple and disable PSReadLine/prompt so we can control it
-                _pwsh.SendLine("$PSStyle.OutputRendering = 'PlainText'");
-                _pwsh.SendLine("Remove-Module PSReadLine -ErrorAction SilentlyContinue");
-                _pwsh.SendLine("function global:prompt {''}");
-
+                //_pwsh.SendLine("$PSStyle.OutputRendering = 'PlainText'");
+                //_pwsh.SendLine("Remove-Module PSReadLine -ErrorAction SilentlyContinue");
+                //_pwsh.SendLine("function global:prompt {''}");
+            
                 var projectDir = GetCurrentDirectory();
                 if (!string.IsNullOrWhiteSpace(projectDir) && Directory.Exists(projectDir))
                 {

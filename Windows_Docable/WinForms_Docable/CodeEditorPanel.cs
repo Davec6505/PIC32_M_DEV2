@@ -111,35 +111,24 @@ namespace PIC32_M_DEV
             if (_customHighlightingRegistered) return;
             _customHighlightingRegistered = true;
 
-            IHighlightingDefinition? LoadFromResource(string resourceName)
+            IHighlightingDefinition? LoadFromResource(string pathOrName)
             {
-                var asm = Assembly.GetExecutingAssembly();
-                using var s = asm.GetManifestResourceStream(resourceName);
-                if (s == null)
-                    throw new InvalidOperationException($"Missing highlighting resource: {resourceName}");
+                string path = Path.IsPathRooted(pathOrName)
+                    ? pathOrName
+                    : Path.Combine(AppContext.BaseDirectory, "Highlighting", pathOrName);
+
+                if (!File.Exists(path))
+                    throw new InvalidOperationException($"Missing highlighting file: {path}");
+
+                using var s = File.OpenRead(path);
                 using var reader = XmlReader.Create(s, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null });
-                try
-                {
-                    var xshd = HighlightingLoader.LoadXshd(reader);
-                    return HighlightingLoader.Load(xshd, HighlightingManager.Instance);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Failed to load syntax highlighting: {resourceName}: {ex.Message}", "Error in Syntax Highlighting!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                return null;
+                var xshd = HighlightingLoader.LoadXshd(reader);
+                return HighlightingLoader.Load(xshd, HighlightingManager.Instance);
             }
 
             // Makefile
-            IHighlightingDefinition? makefile = null;
-            if (darkMode == true)
-            {
-                makefile = LoadFromResource("PIC32_M_DEV.Highlighting.MakefileDark.xshd");
-            }
-            else
-            {
-                makefile = LoadFromResource("PIC32_M_DEV.Highlighting.Makefile.xshd");
-            }
+            var name = darkMode == true ? "MakefileDark.xshd" : "Makefile.xshd";
+            var makefile = LoadFromResource(name);
             if (makefile != null)
             {
                 HighlightingManager.Instance.RegisterHighlighting(
@@ -149,15 +138,7 @@ namespace PIC32_M_DEV
             }
 
             // GAS/ASM
-            IHighlightingDefinition? gas = null;
-            if (darkMode == true)
-            {
-                gas = LoadFromResource("PIC32_M_DEV.Highlighting.GASDark.xshd");
-            }
-            else
-            {
-                gas = LoadFromResource("PIC32_M_DEV.Highlighting.GAS.xshd");
-            }
+            var gas = LoadFromResource(darkMode == true ? "GASDark.xshd" : "GAS.xshd");
             if (gas != null)
             {
                 HighlightingManager.Instance.RegisterHighlighting(
@@ -167,21 +148,13 @@ namespace PIC32_M_DEV
             }
 
             // C/C++ Highlighting
-            IHighlightingDefinition? cHighlighting = null;
-            if (darkMode == true)
-            {
-                cHighlighting = LoadFromResource("PIC32_M_DEV.Highlighting.CDark.xshd");
-            }
-            else
-            {
-                cHighlighting = LoadFromResource("PIC32_M_DEV.Highlighting.C.xshd");
-            }
-            if (cHighlighting != null)
+            var c = LoadFromResource(darkMode == true ? "CDark.xshd" : "C.xshd");
+            if (c != null)
             {
                 HighlightingManager.Instance.RegisterHighlighting(
                     "C/C++",
                     new[] { ".c", ".h" },
-                    cHighlighting);
+                    c);
             }
         }
 

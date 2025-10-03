@@ -48,8 +48,21 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
   </ItemGroup>
-
+  
+    <ItemGroup>
+    <None Include="Highlighting\*.xshd" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  
+<ItemGroup>
+  <None Include="Highlighting\*.xshd" CopyToOutputDirectory="PreserveNewest" />
+</ItemGroup>   
   <ItemGroup>
+    <EmbeddedResource Update="Highlighting\C.xshd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Highlighting\CDark.xshd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Update="Highlighting\GASDark.xshd">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
@@ -87,6 +100,10 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Highlighting\*.xshd" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- Remove reference assemblies from output to avoid runtime binding to ref assemblies -->
