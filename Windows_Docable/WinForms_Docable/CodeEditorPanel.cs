@@ -9,6 +9,7 @@ using System.Windows.Forms.Integration;
 using System.Windows.Media;
 using System.Xml;
 using WeifenLuo.WinFormsUI.Docking;
+using PIC32_M_DEV.classes; // for ThemeManager and EditorLanguage
 
 namespace PIC32_M_DEV
 {
@@ -59,6 +60,9 @@ namespace PIC32_M_DEV
 
             ApplySyntaxHighlighting();
 
+            // Apply user-selected theme for this file type
+            ApplyLanguageThemeFromManager();
+
             // Right-click context menu for Save / Close
             InitializeEditorContextMenu();
 
@@ -93,6 +97,9 @@ namespace PIC32_M_DEV
                 }
             };
 
+            var themeParent = new System.Windows.Controls.MenuItem { Header = "Theme" };
+            PopulateThemeMenu(themeParent);
+
             var closeItem = new System.Windows.Controls.MenuItem { Header = "Close" };
             closeItem.Click += (s, e) =>
             {
@@ -101,9 +108,31 @@ namespace PIC32_M_DEV
 
             menu.Items.Add(saveItem);
             menu.Items.Add(new System.Windows.Controls.Separator());
+            menu.Items.Add(themeParent);
+            menu.Items.Add(new System.Windows.Controls.Separator());
             menu.Items.Add(closeItem);
 
             _avalon.TextArea.ContextMenu = menu;
+        }
+
+        private void PopulateThemeMenu(System.Windows.Controls.MenuItem themeParent)
+        {
+            themeParent.Items.Clear();
+            var lang = DetectLanguage();
+            var current = ThemeManager.GetCurrentTheme(lang).Name;
+
+            foreach (var t in ThemeManager.GetThemes(lang))
+            {
+                var item = new System.Windows.Controls.MenuItem { Header = t.Name, IsCheckable = true, IsChecked = string.Equals(t.Name, current, StringComparison.Ordinal) };
+                item.Click += (s, e) =>
+                {
+                    ThemeManager.SetCurrentTheme(lang, t.Name);
+                    ApplyLanguageThemeFromManager();
+                    // Refresh checkmarks
+                    PopulateThemeMenu(themeParent);
+                };
+                themeParent.Items.Add(item);
+            }
         }
 
         private static void RegisterCustomHighlightings(bool? darkMode = null)
@@ -260,6 +289,9 @@ namespace PIC32_M_DEV
             _avalon.LineNumbersForeground = new SolidColorBrush(darkMode ? System.Windows.Media.Color.FromRgb(190, 190, 190) : System.Windows.Media.Colors.Black);
             // Optional: if you have theme-wide XSHD files, try to apply them.
             TryApplySyntaxTheme(darkMode);
+
+            // Finally, re-apply user overrides for the detected language (wins over global light/dark)
+            ApplyLanguageThemeFromManager();
         }
 
         private void TryApplySyntaxTheme(bool darkMode)
@@ -276,6 +308,26 @@ namespace PIC32_M_DEV
             _avalon.SyntaxHighlighting = def;
         }
 
+        private EditorLanguage DetectLanguage()
+        {
+            var fileName = Path.GetFileName(FilePath);
+            var ext = Path.GetExtension(FilePath).ToLowerInvariant();
 
+            if (ext is ".c" or ".h") return EditorLanguage.C;
+            if (ext is ".s" or ".asm" or ".s64" or ".s32" or ".s16" || ext == ".S") return EditorLanguage.Asm;
+            if (ext is ".mak" or ".make" or ".mk") return EditorLanguage.Makefile;
+            if (fileName.Equals("Makefile", StringComparison.OrdinalIgnoreCase) ||
+                fileName.Equals("GNUmakefile", StringComparison.OrdinalIgnoreCase))
+                return EditorLanguage.Makefile;
+
+            // Default to C if unknown
+            return EditorLanguage.C;
+        }
+
+        private void ApplyLanguageThemeFromManager()
+        {
+            var lang = DetectLanguage();
+            ThemeManager.ApplyTo(_avalon, lang);
+        }
     }
 }

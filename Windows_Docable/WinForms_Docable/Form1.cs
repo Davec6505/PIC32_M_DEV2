@@ -168,7 +168,11 @@ namespace PIC32_M_DEV
                 Environment.Exit(0);
             };
             _viewMenu.DropDownItems.Add(_darkModeMenuItem);
-
+            _viewMenu.DropDownItems.Add(new ToolStripSeparator());
+            _viewMenu.DropDownItems.Add(new ToolStripMenuItem("Datasheet", null, OnOpenDatasheetClicked));
+            _viewMenu.DropDownItems.Add(new ToolStripSeparator());
+            _viewMenu.DropDownItems.Add(new ToolStripMenuItem("User Guide"));
+            _viewMenu.DropDownItems.Add(new ToolStripSeparator());
             // Add Open PowerShell menu item
             _openPowerShellMenuItem = new ToolStripMenuItem("Open PowerShell", null, OnOpenPowerShellClicked);
             _viewMenu.DropDownItems.Add(_openPowerShellMenuItem);
@@ -197,6 +201,22 @@ namespace PIC32_M_DEV
             this.Controls.Add(_menuStrip);
 
             UpdateFileMenuState();
+        }
+
+        private void OnOpenDatasheetClicked(object? sender, EventArgs e)
+        {
+            // Build path to the datasheet in the output folder
+            string pdfPath = Path.Combine(AppContext.BaseDirectory, "dependancies", "datasheets", "PIC32MZ2048EFH.pdf");
+            if (!File.Exists(pdfPath))
+            {
+                MessageBox.Show($"Datasheet not found:\n{pdfPath}", "Open PDF", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            var viewer = new PdfViewerPanel();
+            viewer.ApplyTheme(_darkMode);
+            viewer.Show(dockPanel, DockState.Document);
+            _ = viewer.NavigateToPdfAsync(pdfPath);
         }
 
         // --- Event Handlers for Menu Actions ---
@@ -634,31 +654,19 @@ namespace PIC32_M_DEV
         /// </summary>
         private void InitializeEventHandlers()
         {
+            if (_projectPanel == null) return;
             _projectPanel.SaveFileRequested += (s, filePath) => {
                 if (_openEditors.TryGetValue(filePath, out var editor) && editor != null)
-                    editor.SaveToFile(); // This saves the actual file content
+                    editor.SaveToFile();
             };
-
             _projectPanel.SaveFileAsRequested += (s, args) => {
                 var editor = GetActiveEditor();
                 var (filePath, targetPath) = args;
-                if (editor != null)
-                {
-                    editor.SaveToFile(); // Save current content to filePath
-                    File.Copy(filePath, targetPath, true); // Copy to targetPath
-                }
-                else
-                {
-                    File.Copy(filePath, targetPath, true);
-                }
+                if (editor != null) editor.SaveToFile();
+                File.Copy(filePath, targetPath, true);
             };
-
-            _projectPanel.CloseFileRequested += (s, filePath) =>
-            {
-                if (_openEditors.TryGetValue(filePath, out var editor))
-                {
-                    editor.Close(); // This will close the AvalonEdit view for the file
-                }
+            _projectPanel.CloseFileRequested += (s, filePath) => {
+                if (_openEditors.TryGetValue(filePath, out var editor)) editor.Close();
             };
         }
 

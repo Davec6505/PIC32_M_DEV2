@@ -12,9 +12,10 @@
 
   <ItemGroup>
     <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
-    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.4.0" />
-    <PackageReference Include="DockPanelSuite" Version="3.1.0" />
-    <PackageReference Include="DockPanelSuite.ThemeVS2015" Version="3.1.0" />
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.5.3" />
+    <PackageReference Include="DockPanelSuite" Version="3.1.1" />
+    <PackageReference Include="DockPanelSuite.ThemeVS2015" Version="3.1.1" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3485.44" />
   </ItemGroup>
 
   <ItemGroup>
@@ -103,7 +104,25 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="dependancies\datasheets\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="assets\pdfjs\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="Highlighting\*.xshd" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="dependancies\datasheets\PIC32MZ2048EFH.pdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="dependancies\datasheets\PIC32MZ-Embedded-Connectivity-with-Floating-Point-Unit-Family-Data-Sheet-DS60001320H.pdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="assets\pdfjs\" />
   </ItemGroup>
 
   <!-- Remove reference assemblies from output to avoid runtime binding to ref assemblies -->
