@@ -213,10 +213,20 @@ namespace PIC32_M_DEV
                 return;
             }
 
-            var viewer = new PdfViewerPanel();
-            viewer.ApplyTheme(_darkMode);
+            // Reuse existing tab if already open for same file
+            foreach (var content in dockPanel.Contents)
+            {
+                if (content is PdfJsViewerPanel pdf && pdf.ToolTipText.Equals(pdfPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    pdf.Activate();
+                    return;
+                }
+            }
+
+            // Use the new, reliable WebView2-based viewer
+            var viewer = new PdfJsViewerPanel(pdfPath, _darkMode);
             viewer.Show(dockPanel, DockState.Document);
-            _ = viewer.NavigateToPdfAsync(pdfPath);
+            viewer.Activate();
         }
 
         // --- Event Handlers for Menu Actions ---
