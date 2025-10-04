@@ -3,6 +3,7 @@ using PIC32_M_DEV.Interfaces;
 using PIC32_M_DEV.Properties;
 using System.IO;
 using WeifenLuo.WinFormsUI.Docking;
+using Microsoft.Web.WebView2.Core;
 
 namespace PIC32_M_DEV
 {
@@ -205,8 +206,18 @@ namespace PIC32_M_DEV
 
         private void OnOpenDatasheetClicked(object? sender, EventArgs e)
         {
-            // Build path to the datasheet in the output folder
-            string pdfPath = Path.Combine(AppContext.BaseDirectory, "dependancies", "datasheets", "PIC32MZ2048EFH.pdf");
+            // futrue proofing: check if webview2 runtime is installed
+            // add appnotes for all the mz and mx chips as reference text files and options to choose a file from parent directory.
+            OpenFileDialog ofd = new OpenFileDialog
+            {
+                Title = "Select a datasheet PDF",
+                Filter = "PDF Files (*.pdf)|*.pdf",
+                InitialDirectory = Path.Combine(AppContext.BaseDirectory, "dependancies", "datasheets")
+            };
+            if (ofd.ShowDialog() != DialogResult.OK)
+                return;
+
+            string pdfPath = ofd.FileName;
             if (!File.Exists(pdfPath))
             {
                 MessageBox.Show($"Datasheet not found:\n{pdfPath}", "Open PDF", MessageBoxButtons.OK, MessageBoxIcon.Error);
