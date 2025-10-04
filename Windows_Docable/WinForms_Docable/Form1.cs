@@ -193,7 +193,9 @@ namespace PIC32_M_DEV
                 new ToolStripMenuItem("Save Layout", null, OnSaveLayoutClicked),
                 new ToolStripMenuItem("MPLABX",null, OnOpenMPLABXClicked),
                 new ToolStripMenuItem("MCC Standalone",null,OnOpenMCCStandaloneClicked),
-                new ToolStripMenuItem("VS Code",null,OnOpenVSCodeClicked)
+                new ToolStripMenuItem("VS Code",null,OnOpenVSCodeClicked),
+                new ToolStripSeparator(),
+                new ToolStripMenuItem("Editor Theme...", null, OnEditorThemeClicked)
             });
 
             // Add menus to the menu strip
@@ -658,7 +660,7 @@ namespace PIC32_M_DEV
         {
             dockPanel.BackColor = darkMode ? Color.FromArgb(0, 0, 0) : SystemColors.Control;
             this.BackColor = darkMode ? Color.FromArgb(0, 0, 0) : SystemColors.Control;
-            this.ForeColor = darkMode ? Color.FromArgb(0,0,0) : SystemColors.ControlText;
+            this.ForeColor = darkMode ? Color.Gainsboro : SystemColors.ControlText;
             // ...menu and recursive colors...
         }
 
@@ -860,6 +862,16 @@ namespace PIC32_M_DEV
             {
                 _psPanel.Show(dockPanel, DockState.DockBottomAutoHide);
                 _psPanel.Activate();
+            }
+        }
+
+        private void OnEditorThemeClicked(object? sender, EventArgs e)
+        {
+            using var dlg = new ThemeOptionsDialog();
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                // Re-apply current themes to all open editors and themed panels
+                ApplyThemeToAllDockContents(_darkMode);
             }
         }
     }

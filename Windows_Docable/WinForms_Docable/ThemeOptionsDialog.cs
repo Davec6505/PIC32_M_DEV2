@@ -167,5 +167,9 @@ namespace PIC32_M_DEV
             if (!string.IsNullOrWhiteSpace(newName)) _working.Name = newName;
             ThemeManager.SaveCustomTheme(_lang, _working, setCurrent: true);
         }
+        public ThemeOptionsDialog(EditorLanguage initialLanguage) : this()
+        {
+            _languageCombo.SelectedItem = initialLanguage;
+        }
     }
 }

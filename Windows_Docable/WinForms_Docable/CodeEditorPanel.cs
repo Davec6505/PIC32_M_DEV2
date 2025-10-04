@@ -100,6 +100,23 @@ namespace PIC32_M_DEV
             var themeParent = new System.Windows.Controls.MenuItem { Header = "Theme" };
             PopulateThemeMenu(themeParent);
 
+            // Add a customize action
+            var customize = new System.Windows.Controls.MenuItem { Header = "Customize..." };
+            customize.Click += (s, e) =>
+            {
+                var lang = DetectLanguage();
+                using var dlg = new ThemeOptionsDialog(lang);
+                if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    // Re-apply the current file's theme right away
+                    ApplyLanguageThemeFromManager();
+                    // Refresh theme list checkmarks
+                    PopulateThemeMenu(themeParent);
+                }
+            };
+            themeParent.Items.Add(new System.Windows.Controls.Separator());
+            themeParent.Items.Add(customize);
+
             var closeItem = new System.Windows.Controls.MenuItem { Header = "Close" };
             closeItem.Click += (s, e) =>
             {
@@ -147,7 +164,7 @@ namespace PIC32_M_DEV
                     : Path.Combine(AppContext.BaseDirectory, "Highlighting", pathOrName);
 
                 if (!File.Exists(path))
-                    throw new InvalidOperationException($"Missing highlighting file: {path}");
+                    return null; // be resilient: missing files shouldn't break the editor
 
                 using var s = File.OpenRead(path);
                 using var reader = XmlReader.Create(s, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null });
@@ -156,8 +173,8 @@ namespace PIC32_M_DEV
             }
 
             // Makefile
-            var name = darkMode == true ? "MakefileDark.xshd" : "Makefile.xshd";
-            var makefile = LoadFromResource(name);
+            var makeXshd = darkMode == true ? "MakefileDark.xshd" : "Makefile.xshd";
+            var makefile = LoadFromResource(makeXshd) ?? LoadFromResource("Makefile.xshd");
             if (makefile != null)
             {
                 HighlightingManager.Instance.RegisterHighlighting(
@@ -167,7 +184,8 @@ namespace PIC32_M_DEV
             }
 
             // GAS/ASM
-            var gas = LoadFromResource(darkMode == true ? "GASDark.xshd" : "GAS.xshd");
+            var gas = (darkMode == true ? LoadFromResource("GASDark.xshd") : LoadFromResource("GAS.xshd"))
+                      ?? LoadFromResource("GAS.xshd");
             if (gas != null)
             {
                 HighlightingManager.Instance.RegisterHighlighting(
@@ -177,7 +195,8 @@ namespace PIC32_M_DEV
             }
 
             // C/C++ Highlighting
-            var c = LoadFromResource(darkMode == true ? "CDark.xshd" : "C.xshd");
+            var c = (darkMode == true ? LoadFromResource("CDark.xshd") : LoadFromResource("C.xshd"))
+                    ?? LoadFromResource("C.xshd");
             if (c != null)
             {
                 HighlightingManager.Instance.RegisterHighlighting(
@@ -287,10 +306,11 @@ namespace PIC32_M_DEV
             _avalon.TextArea.TextView.CurrentLineBorder = null;
 
             _avalon.LineNumbersForeground = new SolidColorBrush(darkMode ? System.Windows.Media.Color.FromRgb(190, 190, 190) : System.Windows.Media.Colors.Black);
-            // Optional: if you have theme-wide XSHD files, try to apply them.
-            TryApplySyntaxTheme(darkMode);
 
-            // Finally, re-apply user overrides for the detected language (wins over global light/dark)
+            // Keep the language-specific grammar; do not replace with a global theme XSHD
+            ApplySyntaxHighlighting();
+
+            // Finally, re-apply user overrides for the detected language
             ApplyLanguageThemeFromManager();
         }
 
