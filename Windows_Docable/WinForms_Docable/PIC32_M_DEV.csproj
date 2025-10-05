@@ -79,6 +79,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="dependancies\scripts\startMikroe.ps1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="dependancies\scripts\startMPLAB_IPE.sh">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="dependancies\scripts\startMPLAB_IPE.ps1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="dependancies\scripts\startMcc.ps1">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

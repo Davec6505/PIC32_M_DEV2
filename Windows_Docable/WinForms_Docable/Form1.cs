@@ -195,6 +195,9 @@ namespace PIC32_M_DEV
                 new ToolStripMenuItem("MCC Standalone",null,OnOpenMCCStandaloneClicked),
                 new ToolStripMenuItem("VS Code",null,OnOpenVSCodeClicked),
                 new ToolStripSeparator(),
+                new ToolStripMenuItem("MPLAB IPE", null, OnOpenMPLAB_IPEClicked),
+                new ToolStripMenuItem("Mikroe Bootloader", null, OnOpenMikroeBootloaderClicked),
+                new ToolStripSeparator(),
                 new ToolStripMenuItem("Editor Theme...", null, OnEditorThemeClicked)
             });
 
@@ -205,6 +208,8 @@ namespace PIC32_M_DEV
 
             UpdateFileMenuState();
         }
+
+
 
         private void OnOpenDatasheetClicked(object? sender, EventArgs e)
         {
@@ -273,6 +278,21 @@ namespace PIC32_M_DEV
             scr.launch("startMPLABX");
             scr.alert_changes(Settings.Default.mirrorPath);
         }
+
+        private void OnOpenMPLAB_IPEClicked(object? sender, EventArgs e)
+        {
+            var scr = new scripts();
+            scr.launch("startMPLAB_IPE");
+            scr.alert_changes(Settings.Default.mirrorPath);
+        }
+
+        private void OnOpenMikroeBootloaderClicked(object? sender, EventArgs e)
+        {
+            var scr = new scripts();
+            scr.launch("startMikroe");
+            scr.alert_changes(Settings.Default.mirrorPath);
+        }
+
 
         /// <summary>
         /// Saves the current layout to disk.
